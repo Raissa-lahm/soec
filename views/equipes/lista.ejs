@@ -1,0 +1,29 @@
+<% var titulo = 'Equipes - ' + evento.titulo %>
+<%- include('../partials/header') %>
+
+<div class="titulo-pagina">
+    <div>
+        <h1>Equipes do evento</h1>
+        <p><a href="/eventos/<%= evento.id %>">&larr; Voltar para <%= evento.titulo %></a></p>
+    </div>
+    <% if (usuarioLogado.perfil === 'COORDENACAO' || usuarioLogado.perfil === 'DIRECAO') { %>
+        <a href="/eventos/<%= evento.id %>/equipes/novo/form" class="botao botao-primario">+ Nova equipe</a>
+    <% } %>
+</div>
+
+<% if (equipes.length === 0) { %>
+    <div class="cartao"><p>Nenhuma equipe cadastrada para este evento ainda.</p></div>
+<% } else { %>
+    <div class="grade">
+        <% equipes.forEach(eq => { %>
+            <div class="cartao">
+                <h3><%= eq.nome %></h3>
+                <p><%= eq.modalidade || 'Modalidade geral' %></p>
+                <p><small><%= eq.total_membros %> membro(s)</small></p>
+                <a href="/equipes/<%= eq.id %>" class="botao botao-primario">Ver / participar</a>
+            </div>
+        <% }) %>
+    </div>
+<% } %>
+
+<%- include('../partials/footer') %>

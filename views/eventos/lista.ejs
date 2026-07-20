@@ -1,0 +1,59 @@
+<% var titulo = 'Eventos' %>
+<%- include('../partials/header') %>
+
+<div class="titulo-pagina">
+    <h1>Eventos</h1>
+    <% if (usuarioLogado.perfil === 'COORDENACAO' || usuarioLogado.perfil === 'DIRECAO') { %>
+        <a href="/eventos/novo/form" class="botao botao-primario">+ Novo evento</a>
+    <% } %>
+</div>
+
+<form class="barra-filtros" method="GET" action="/eventos">
+    <div class="campo">
+        <label for="pesquisa">Pesquisar</label>
+        <input type="text" id="pesquisa" name="pesquisa" placeholder="Titulo do evento..." value="<%= filtros.pesquisa %>">
+    </div>
+    <div class="campo">
+        <label for="tipo">Categoria</label>
+        <select id="tipo" name="tipo">
+            <option value="">Todas</option>
+            <% tiposDisponiveis.forEach(t => { %>
+                <option value="<%= t %>" <%= filtros.tipo === t ? 'selected' : '' %>><%= t %></option>
+            <% }) %>
+        </select>
+    </div>
+    <div class="campo">
+        <label for="data">Data</label>
+        <input type="date" id="data" name="data" value="<%= filtros.data %>">
+    </div>
+    <div class="campo" style="flex: 0;">
+        <button type="submit" class="botao botao-primario">Filtrar</button>
+    </div>
+    <% if (filtros.pesquisa || filtros.tipo || filtros.data) { %>
+        <div class="campo" style="flex: 0;">
+            <a href="/eventos" class="botao botao-secundario">Limpar</a>
+        </div>
+    <% } %>
+</form>
+
+<% if (eventos.length === 0) { %>
+    <div class="cartao"><p>Nenhum evento encontrado com os filtros informados.</p></div>
+<% } else { %>
+    <div class="grade">
+        <% eventos.forEach(evento => { %>
+            <div class="cartao">
+                <span class="tag"><%= evento.tipo %></span>
+                <h3><%= evento.titulo %></h3>
+                <p><%= (evento.descricao || '').substring(0, 110) %><%= (evento.descricao || '').length > 110 ? '...' : '' %></p>
+                <p><small>
+                    <%= new Date(evento.data_evento).toLocaleString('pt-BR') %><br>
+                    <%= evento.local || 'Local a definir' %><br>
+                    Inscritos: <%= evento.total_inscritos %><%= evento.vagas_limite > 0 ? ' / ' + evento.vagas_limite : '' %>
+                </small></p>
+                <a href="/eventos/<%= evento.id %>" class="botao botao-primario">Ver detalhes</a>
+            </div>
+        <% }) %>
+    </div>
+<% } %>
+
+<%- include('../partials/footer') %>

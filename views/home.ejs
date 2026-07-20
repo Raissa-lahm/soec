@@ -1,0 +1,52 @@
+<% var titulo = 'Inicio' %>
+<%- include('partials/header') %>
+
+<div class="titulo-pagina">
+    <h1>Bem-vindo(a), <%= usuarioLogado.nome.split(' ')[0] %>!</h1>
+</div>
+
+<div class="grade">
+    <div class="cartao">
+        <h3>Proximos eventos</h3>
+        <% if (proximosEventos.length === 0) { %>
+            <p>Nenhum evento futuro cadastrado no momento.</p>
+        <% } else { %>
+            <% proximosEventos.forEach(evento => { %>
+                <div style="margin-bottom: 0.9rem;">
+                    <span class="tag"><%= evento.tipo %></span><br>
+                    <a href="/eventos/<%= evento.id %>"><strong><%= evento.titulo %></strong></a><br>
+                    <small><%= new Date(evento.data_evento).toLocaleString('pt-BR') %> - <%= evento.local || 'Local a definir' %></small>
+                </div>
+            <% }) %>
+        <% } %>
+        <a href="/eventos" class="botao botao-secundario">Ver todos os eventos</a>
+    </div>
+
+    <div class="cartao">
+        <h3>Ultimos comunicados</h3>
+        <% if (comunicados.length === 0) { %>
+            <p>Nenhum comunicado publicado ainda.</p>
+        <% } else { %>
+            <% comunicados.forEach(c => { %>
+                <div style="margin-bottom: 0.9rem;">
+                    <strong><%= c.titulo %></strong><br>
+                    <small><%= new Date(c.data_publicacao).toLocaleDateString('pt-BR') %> - por <%= c.nome_criador %></small>
+                </div>
+            <% }) %>
+        <% } %>
+        <a href="/comunicados" class="botao botao-secundario">Ver todos os comunicados</a>
+    </div>
+
+    <div class="cartao">
+        <h3>Acesso rapido</h3>
+        <div class="acoes" style="flex-direction: column;">
+            <a href="/calendario" class="botao botao-primario">Calendario institucional</a>
+            <a href="/regulamentos" class="botao botao-secundario">Regulamentos</a>
+            <% if (usuarioLogado.perfil === 'ALUNO') { %>
+                <a href="/minhas-inscricoes" class="botao botao-secundario">Minhas inscricoes</a>
+            <% } %>
+        </div>
+    </div>
+</div>
+
+<%- include('partials/footer') %>

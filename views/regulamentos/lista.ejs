@@ -1,0 +1,36 @@
+<% var titulo = 'Regulamentos' %>
+<%- include('../partials/header') %>
+
+<div class="titulo-pagina">
+    <h1>Regulamentos</h1>
+    <% if (usuarioLogado.perfil === 'COORDENACAO' || usuarioLogado.perfil === 'DIRECAO') { %>
+        <a href="/regulamentos/novo/form" class="botao botao-primario">+ Novo regulamento</a>
+    <% } %>
+</div>
+
+<% if (regulamentos.length === 0) { %>
+    <div class="cartao"><p>Nenhum regulamento publicado ainda.</p></div>
+<% } else { %>
+    <div class="grade">
+        <% regulamentos.forEach(r => { %>
+            <div class="cartao">
+                <h3><%= r.titulo %></h3>
+                <p><%= r.descricao %></p>
+                <% if (r.arquivo_url) { %>
+                    <p><a href="<%= r.arquivo_url %>" target="_blank" rel="noopener">Abrir arquivo do regulamento</a></p>
+                <% } %>
+                <p><small>Publicado em <%= new Date(r.criado_em).toLocaleDateString('pt-BR') %> por <%= r.nome_criador %></small></p>
+                <% if (usuarioLogado.perfil === 'COORDENACAO' || usuarioLogado.perfil === 'DIRECAO') { %>
+                    <div class="acoes">
+                        <a href="/regulamentos/<%= r.id %>/editar" class="botao botao-secundario">Editar</a>
+                        <form class="form-confirmar-exclusao" data-mensagem="Excluir este regulamento?" action="/regulamentos/<%= r.id %>?_method=DELETE" method="POST">
+                            <button type="submit" class="botao botao-perigo">Excluir</button>
+                        </form>
+                    </div>
+                <% } %>
+            </div>
+        <% }) %>
+    </div>
+<% } %>
+
+<%- include('../partials/footer') %>

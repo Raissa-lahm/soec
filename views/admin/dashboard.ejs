@@ -1,0 +1,38 @@
+<% var titulo = 'Area administrativa' %>
+<%- include('../partials/header') %>
+
+<div class="titulo-pagina">
+    <h1>Area administrativa</h1>
+    <a href="/admin/usuarios" class="botao botao-primario">Gerenciar usuarios</a>
+</div>
+
+<div class="grade">
+    <div class="cartao">
+        <h3>Alunos</h3>
+        <p style="font-size: 2rem; font-weight: 700; color: var(--cor-primaria);"><%= totais.alunos %></p>
+    </div>
+    <div class="cartao">
+        <h3>Professores</h3>
+        <p style="font-size: 2rem; font-weight: 700; color: var(--cor-primaria);"><%= totais.professores %></p>
+    </div>
+    <div class="cartao">
+        <h3>Coordenacao</h3>
+        <p style="font-size: 2rem; font-weight: 700; color: var(--cor-primaria);"><%= totais.coordenacao %></p>
+    </div>
+    <div class="cartao">
+        <h3>Direcao</h3>
+        <p style="font-size: 2rem; font-weight: 700; color: var(--cor-primaria);"><%= totais.direcao %></p>
+    </div>
+</div>
+
+<div class="cartao" style="margin-top: 1.2rem;">
+    <h3>Atalhos de gestao</h3>
+    <div class="acoes">
+        <a href="/eventos/novo/form" class="botao botao-secundario">Novo evento</a>
+        <a href="/comunicados/novo/form" class="botao botao-secundario">Novo comunicado</a>
+        <a href="/regulamentos/novo/form" class="botao botao-secundario">Novo regulamento</a>
+        <a href="/admin/usuarios/novo/form" class="botao botao-secundario">Novo usuario</a>
+    </div>
+</div>
+
+<%- include('../partials/footer') %>

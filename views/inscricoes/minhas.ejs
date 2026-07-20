@@ -1,0 +1,43 @@
+<% var titulo = 'Minhas inscricoes' %>
+<%- include('../partials/header') %>
+
+<div class="titulo-pagina">
+    <h1>Minhas inscricoes</h1>
+</div>
+
+<% if (inscricoes.length === 0) { %>
+    <div class="cartao"><p>Voce ainda nao esta inscrito(a) em nenhum evento.</p></div>
+<% } else { %>
+    <div class="tabela-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Evento</th>
+                    <th>Categoria</th>
+                    <th>Data do evento</th>
+                    <th>Local</th>
+                    <th>Inscrito em</th>
+                    <th>Acoes</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% inscricoes.forEach(i => { %>
+                    <tr>
+                        <td><a href="/eventos/<%= i.evento_id %>"><%= i.titulo %></a></td>
+                        <td><span class="tag"><%= i.tipo %></span></td>
+                        <td><%= new Date(i.data_evento).toLocaleString('pt-BR') %></td>
+                        <td><%= i.local || '-' %></td>
+                        <td><%= new Date(i.data_inscricao).toLocaleDateString('pt-BR') %></td>
+                        <td>
+                            <form action="/eventos/<%= i.evento_id %>/cancelar-inscricao" method="POST">
+                                <button type="submit" class="botao botao-perigo">Cancelar</button>
+                            </form>
+                        </td>
+                    </tr>
+                <% }) %>
+            </tbody>
+        </table>
+    </div>
+<% } %>
+
+<%- include('../partials/footer') %>

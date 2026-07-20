@@ -1,0 +1,331 @@
+/* =========================================================================
+   public/css/style.css
+   Estilo visual do SOEC - cores institucionais do CIMOL (verde e dourado,
+   cores tradicionalmente associadas a escolas tecnicas/agricolas do RS).
+   Ajuste as variaveis abaixo se as cores oficiais do CIMOL forem diferentes.
+   ========================================================================= */
+
+:root {
+    --cor-primaria: #0b5d34;       /* verde institucional escuro */
+    --cor-primaria-clara: #157a45; /* verde institucional mais claro */
+    --cor-destaque: #d4af37;       /* dourado de destaque */
+    --cor-fundo: #f4f6f5;
+    --cor-texto: #1f2a24;
+    --cor-branco: #ffffff;
+    --cor-erro: #b3261e;
+    --cor-sucesso: #1b7a3d;
+    --sombra: 0 2px 10px rgba(0, 0, 0, 0.08);
+    --raio: 10px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: var(--cor-fundo);
+    color: var(--cor-texto);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+a { color: var(--cor-primaria); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ------------------------- Cabecalho / Navegacao ------------------------- */
+
+.cabecalho {
+    background: linear-gradient(90deg, var(--cor-primaria) 0%, var(--cor-primaria-clara) 100%);
+    color: var(--cor-branco);
+    box-shadow: var(--sombra);
+}
+
+.cabecalho-conteudo {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.9rem 1.2rem;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+}
+
+.marca {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 700;
+    font-size: 1.3rem;
+    color: var(--cor-branco);
+}
+
+.marca .destaque { color: var(--cor-destaque); }
+
+.nav-principal {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    align-items: center;
+}
+
+.nav-principal a, .nav-principal button {
+    color: var(--cor-branco);
+    background: transparent;
+    border: none;
+    padding: 0.5rem 0.8rem;
+    border-radius: var(--raio);
+    font-size: 0.95rem;
+    cursor: pointer;
+}
+
+.nav-principal a:hover, .nav-principal button:hover {
+    background: rgba(255, 255, 255, 0.15);
+    text-decoration: none;
+}
+
+.nav-principal a.ativo {
+    background: var(--cor-destaque);
+    color: var(--cor-primaria);
+    font-weight: 600;
+}
+
+.usuario-tag {
+    font-size: 0.85rem;
+    color: var(--cor-destaque);
+    padding: 0.5rem 0.8rem;
+}
+
+/* ------------------------------- Layout ------------------------------- */
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1.6rem 1.2rem;
+    flex: 1;
+    width: 100%;
+}
+
+.grade {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.2rem;
+}
+
+.cartao {
+    background: var(--cor-branco);
+    border-radius: var(--raio);
+    box-shadow: var(--sombra);
+    padding: 1.2rem;
+    border-top: 4px solid var(--cor-primaria);
+}
+
+.cartao h3 { margin-top: 0; color: var(--cor-primaria); }
+
+.tag {
+    display: inline-block;
+    background: var(--cor-primaria);
+    color: var(--cor-branco);
+    font-size: 0.75rem;
+    padding: 0.15rem 0.6rem;
+    border-radius: 20px;
+    margin-bottom: 0.4rem;
+}
+
+.tag-dourada { background: var(--cor-destaque); color: var(--cor-primaria); }
+
+/* ------------------------------- Titulos ------------------------------- */
+
+h1, h2 { color: var(--cor-primaria); }
+
+.titulo-pagina {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    margin-bottom: 1.2rem;
+}
+
+/* ------------------------------ Formularios ------------------------------ */
+
+.form-cartao {
+    background: var(--cor-branco);
+    border-radius: var(--raio);
+    box-shadow: var(--sombra);
+    padding: 1.6rem;
+    max-width: 640px;
+    margin: 0 auto;
+}
+
+.campo { margin-bottom: 1rem; }
+
+.campo label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.3rem;
+    font-size: 0.9rem;
+}
+
+.campo input, .campo select, .campo textarea {
+    width: 100%;
+    padding: 0.6rem 0.7rem;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-family: inherit;
+}
+
+.campo input:focus, .campo select:focus, .campo textarea:focus {
+    outline: none;
+    border-color: var(--cor-primaria);
+}
+
+.linha-form {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+.linha-form .campo { flex: 1; min-width: 180px; }
+
+/* -------------------------------- Botoes -------------------------------- */
+
+.botao {
+    display: inline-block;
+    padding: 0.6rem 1.1rem;
+    border-radius: 6px;
+    border: none;
+    font-size: 0.95rem;
+    cursor: pointer;
+    font-weight: 600;
+    text-align: center;
+}
+
+.botao-primario { background: var(--cor-primaria); color: var(--cor-branco); }
+.botao-primario:hover { background: var(--cor-primaria-clara); text-decoration: none; }
+
+.botao-secundario { background: #e5e9e7; color: var(--cor-texto); }
+.botao-secundario:hover { background: #d5dbd8; text-decoration: none; }
+
+.botao-perigo { background: var(--cor-erro); color: var(--cor-branco); }
+.botao-perigo:hover { background: #921f19; }
+
+.botao-dourado { background: var(--cor-destaque); color: var(--cor-primaria); }
+
+.acoes { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.6rem; }
+
+/* -------------------------------- Tabelas -------------------------------- */
+
+.tabela-wrapper { overflow-x: auto; background: var(--cor-branco); border-radius: var(--raio); box-shadow: var(--sombra); }
+
+table { width: 100%; border-collapse: collapse; }
+
+th, td {
+    padding: 0.7rem 0.9rem;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+    font-size: 0.92rem;
+}
+
+th { background: var(--cor-primaria); color: var(--cor-branco); }
+tr:hover td { background: #f7f9f8; }
+
+/* -------------------------------- Alertas -------------------------------- */
+
+.alerta {
+    padding: 0.8rem 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    font-size: 0.92rem;
+}
+.alerta-erro { background: #fbe9e7; color: var(--cor-erro); border: 1px solid var(--cor-erro); }
+.alerta-sucesso { background: #e6f4ea; color: var(--cor-sucesso); border: 1px solid var(--cor-sucesso); }
+
+/* --------------------------------- Login --------------------------------- */
+
+.tela-login {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--cor-primaria) 0%, var(--cor-primaria-clara) 100%);
+    padding: 1rem;
+}
+
+.login-cartao {
+    background: var(--cor-branco);
+    border-radius: var(--raio);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    padding: 2.2rem;
+    width: 100%;
+    max-width: 380px;
+    text-align: center;
+}
+
+.login-cartao h1 {
+    font-size: 1.5rem;
+    margin-bottom: 0.2rem;
+}
+
+.login-cartao .subtitulo {
+    color: #666;
+    font-size: 0.85rem;
+    margin-bottom: 1.4rem;
+}
+
+/* -------------------------------- Rodape -------------------------------- */
+
+.rodape {
+    text-align: center;
+    padding: 1rem;
+    font-size: 0.8rem;
+    color: #666;
+}
+
+/* ------------------------------ Calendario ------------------------------ */
+
+.mes-titulo {
+    background: var(--cor-primaria);
+    color: var(--cor-branco);
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    margin: 1.4rem 0 0.6rem;
+    text-transform: capitalize;
+}
+
+.evento-linha {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--cor-branco);
+    padding: 0.7rem 1rem;
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+    box-shadow: var(--sombra);
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+/* -------------------------------- Filtros -------------------------------- */
+
+.barra-filtros {
+    background: var(--cor-branco);
+    padding: 1rem;
+    border-radius: var(--raio);
+    box-shadow: var(--sombra);
+    margin-bottom: 1.2rem;
+    display: flex;
+    gap: 0.8rem;
+    flex-wrap: wrap;
+    align-items: flex-end;
+}
+.barra-filtros .campo { margin-bottom: 0; flex: 1; min-width: 160px; }
+
+/* -------------------------------- Responsivo -------------------------------- */
+
+@media (max-width: 720px) {
+    .cabecalho-conteudo { flex-direction: column; align-items: flex-start; }
+    .nav-principal { width: 100%; justify-content: flex-start; }
+    .titulo-pagina { flex-direction: column; align-items: flex-start; }
+}

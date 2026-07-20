@@ -1,0 +1,62 @@
+<% var titulo = usuario ? 'Editar usuario' : 'Novo usuario' %>
+<%- include('../partials/header') %>
+
+<div class="titulo-pagina"><h1><%= titulo %></h1></div>
+
+<div class="form-cartao">
+    <% if (typeof erro !== 'undefined' && erro) { %>
+        <div class="alerta alerta-erro"><%= erro %></div>
+    <% } %>
+
+    <form action="<%= acao %>" method="POST">
+        <div class="campo">
+            <label for="nome">Nome completo *</label>
+            <input type="text" id="nome" name="nome" value="<%= usuario ? usuario.nome : '' %>" required>
+        </div>
+
+        <div class="linha-form">
+            <div class="campo">
+                <label for="email">Email *</label>
+                <input type="email" id="email" name="email" value="<%= usuario ? usuario.email : '' %>" required>
+            </div>
+            <div class="campo">
+                <label for="matricula">Matricula *</label>
+                <input type="text" id="matricula" name="matricula" value="<%= usuario ? usuario.matricula : '' %>" required>
+            </div>
+        </div>
+
+        <div class="linha-form">
+            <div class="campo">
+                <label for="perfil">Perfil *</label>
+                <select id="perfil" name="perfil" required>
+                    <option value="">Selecione...</option>
+                    <% ['ALUNO', 'PROFESSOR', 'COORDENACAO', 'DIRECAO'].forEach(p => { %>
+                        <option value="<%= p %>" <%= usuario && usuario.perfil === p ? 'selected' : '' %>><%= p %></option>
+                    <% }) %>
+                </select>
+            </div>
+            <div class="campo">
+                <label for="senha"><%= usuario ? 'Nova senha (deixe em branco para manter)' : 'Senha inicial *' %></label>
+                <input type="password" id="senha" name="senha" <%= usuario ? '' : 'required' %>>
+            </div>
+        </div>
+
+        <div class="linha-form">
+            <div class="campo">
+                <label for="curso">Curso</label>
+                <input type="text" id="curso" name="curso" value="<%= usuario ? (usuario.curso || '') : '' %>">
+            </div>
+            <div class="campo">
+                <label for="turma">Turma</label>
+                <input type="text" id="turma" name="turma" value="<%= usuario ? (usuario.turma || '') : '' %>">
+            </div>
+        </div>
+
+        <div class="acoes">
+            <button type="submit" class="botao botao-primario">Salvar</button>
+            <a href="/admin/usuarios" class="botao botao-secundario">Cancelar</a>
+        </div>
+    </form>
+</div>
+
+<%- include('../partials/footer') %>

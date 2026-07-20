@@ -1,0 +1,64 @@
+<% var titulo = equipe.nome %>
+<%- include('../partials/header') %>
+
+<div class="titulo-pagina">
+    <div>
+        <h1><%= equipe.nome %></h1>
+        <p><small><%= equipe.modalidade || 'Modalidade geral' %> - evento: <a href="/eventos/<%= equipe.evento_id %>"><%= equipe.titulo_evento %></a></small></p>
+    </div>
+    <% if (usuarioLogado.perfil === 'COORDENACAO' || usuarioLogado.perfil === 'DIRECAO') { %>
+        <form class="form-confirmar-exclusao" data-mensagem="Excluir esta equipe?" action="/equipes/<%= equipe.id %>?_method=DELETE" method="POST">
+            <button type="submit" class="botao botao-perigo">Excluir equipe</button>
+        </form>
+    <% } %>
+</div>
+
+<% if (typeof erro !== 'undefined' && erro) { %>
+    <div class="alerta alerta-erro"><%= erro %></div>
+<% } %>
+
+<div class="cartao" style="max-width: 700px;">
+    <h3>Membros</h3>
+    <% if (membros.length === 0) { %>
+        <p>Nenhum membro nesta equipe ainda.</p>
+    <% } else { %>
+        <ul>
+            <% membros.forEach(m => { %>
+                <li>
+                    <%= m.nome %> (<%= m.matricula %><%= m.turma ? ' - ' + m.turma : '' %>)
+                    <% if (usuarioLogado.perfil === 'COORDENACAO' || usuarioLogado.perfil === 'DIRECAO') { %>
+                        <form class="form-confirmar-exclusao" style="display:inline;" data-mensagem="Remover <%= m.nome %> da equipe?" action="/equipes/<%= equipe.id %>/membros/<%= m.usuario_id %>?_method=DELETE" method="POST">
+                            <button type="submit" class="botao botao-perigo" style="padding: 0.1rem 0.5rem; font-size: 0.8rem;">Remover</button>
+                        </form>
+                    <% } %>
+                </li>
+            <% }) %>
+        </ul>
+    <% } %>
+
+    <% if (usuarioLogado.perfil === 'ALUNO') { %>
+        <% if (jaEhMembro) { %>
+            <form action="/equipes/<%= equipe.id %>/sair" method="POST">
+                <button type="submit" class="botao botao-perigo">Sair da equipe</button>
+            </form>
+        <% } else { %>
+            <form action="/equipes/<%= equipe.id %>/entrar" method="POST">
+                <button type="submit" class="botao botao-primario">Participar desta equipe</button>
+            </form>
+        <% } %>
+    <% } %>
+
+    <% if (usuarioLogado.perfil === 'COORDENACAO' || usuarioLogado.perfil === 'DIRECAO') { %>
+        <h3 style="margin-top: 1.4rem;">Adicionar membro pela matricula</h3>
+        <form action="/equipes/<%= equipe.id %>/membros" method="POST" class="linha-form">
+            <div class="campo">
+                <input type="text" name="matricula" placeholder="Matricula do aluno/professor" required>
+            </div>
+            <div class="campo" style="flex: 0;">
+                <button type="submit" class="botao botao-primario">Adicionar</button>
+            </div>
+        </form>
+    <% } %>
+</div>
+
+<%- include('../partials/footer') %>
