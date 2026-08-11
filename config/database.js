@@ -4,8 +4,12 @@
 // Um pool reaproveita conexoes abertas, o que e muito mais eficiente do
 // que abrir/fechar uma conexao nova a cada consulta.
 // =========================================================================
+// =========================================================================
+// config/database.js
+// Responsavel por criar e exportar o "pool" de conexoes com o PostgreSQL.
+// =========================================================================
 
-require('dotenv').config(); // carrega as variaveis do arquivo .env
+require('dotenv').config();
 const { Pool } = require('pg');
 
 // Cria o pool usando os dados definidos no .env
@@ -15,10 +19,12 @@ const pool = new Pool({
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
+    ssl: {
+        rejectUnauthorized: false
+    }
 });
 
-// Testa a conexao assim que o servidor sobe, para avisar rapido se algo
-// estiver errado no .env (senha incorreta, banco nao existe, etc.)
+// Testa a conexao assim que o servidor sobe
 pool.connect()
     .then((client) => {
         console.log('[SOEC] Conectado ao PostgreSQL com sucesso.');
@@ -31,3 +37,4 @@ pool.connect()
 // Exportamos o pool para ser usado pelos "models" com queries parametrizadas,
 // ex: pool.query('SELECT * FROM usuarios WHERE id = $1', [id])
 module.exports = pool;
+
