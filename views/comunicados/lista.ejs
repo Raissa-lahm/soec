@@ -1,0 +1,31 @@
+<% var titulo = 'Comunicados' %>
+<%- include('../partials/header') %>
+
+<div class="titulo-pagina">
+    <h1>Comunicados</h1>
+    <% if (usuarioLogado.perfil === 'COORDENAÇÃO' || usuarioLogado.perfil === 'DIREÇÃO') { %>
+        <a href="/comunicados/novo/form" class="botao botao-primario">+ Novo comunicado</a>
+    <% } %>
+</div>
+
+<% if (comunicados.length === 0) { %>
+    <div class="cartao"><p>Nenhum comunicado publicado ainda.</p></div>
+<% } else { %>
+    <% comunicados.forEach(c => { %>
+        <div class="cartao" style="margin-bottom: 1rem;">
+            <h3><%= c.titulo %></h3>
+            <p><%= c.descricao %></p>
+            <p><small>Publicado em <%= new Date(c.data_publicacao).toLocaleString('pt-BR') %> por <%= c.nome_criador %></small></p>
+            <% if (usuarioLogado.perfil === 'COORDENACAO' || usuarioLogado.perfil === 'DIREÇÃO') { %>
+                <div class="acoes">
+                    <a href="/comunicados/<%= c.id %>/editar" class="botao botao-secundario">Editar</a>
+                    <form class="form-confirmar-exclusao" data-mensagem="Excluir este comunicado?" action="/comunicados/<%= c.id %>?_method=DELETE" method="POST">
+                        <button type="submit" class="botao botao-perigo">Excluir</button>
+                    </form>
+                </div>
+            <% } %>
+        </div>
+    <% }) %>
+<% } %>
+
+<%- include('../partials/footer') %>

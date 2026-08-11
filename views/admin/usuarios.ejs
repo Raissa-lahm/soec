@@ -1,0 +1,60 @@
+<% var titulo = 'Gerenciar usuarios' %>
+<%- include('../partials/header') %>
+
+<div class="titulo-pagina">
+    <h1>Usuarios</h1>
+    <a href="/admin/usuarios/novo/form" class="botao botao-primario">+ Novo usuario</a>
+</div>
+
+<% if (typeof erro !== 'undefined' && erro) { %>
+    <div class="alerta alerta-erro"><%= erro %></div>
+<% } %>
+
+<form class="barra-filtros" method="GET" action="/admin/usuarios">
+    <div class="campo">
+        <label for="perfil">Filtrar por perfil</label>
+        <select id="perfil" name="perfil" onchange="this.form.submit()">
+            <option value="">Todos</option>
+            <option value="ALUNO" <%= filtroPerfil === 'ALUNO' ? 'selected' : '' %>>Aluno</option>
+            <option value="PROFESSOR" <%= filtroPerfil === 'PROFESSOR' ? 'selected' : '' %>>Professor</option>
+            <option value="COORDENACAO" <%= filtroPerfil === 'COORDENACAO' ? 'selected' : '' %>>Coordenacao</option>
+            <option value="DIRECAO" <%= filtroPerfil === 'DIRECAO' ? 'selected' : '' %>>Direcao</option>
+        </select>
+    </div>
+</form>
+
+<div class="tabela-wrapper">
+    <table>
+        <thead>
+            <tr>
+                <th>Nome</th>
+                <th>Matricula</th>
+                <th>Email</th>
+                <th>Perfil</th>
+                <th>Curso/Turma</th>
+                <th>Acoes</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% usuarios.forEach(u => { %>
+                <tr>
+                    <td><%= u.nome %></td>
+                    <td><%= u.matricula %></td>
+                    <td><%= u.email %></td>
+                    <td><span class="tag"><%= u.perfil %></span></td>
+                    <td><%= u.curso || '-' %> <%= u.turma ? '/ ' + u.turma : '' %></td>
+                    <td>
+                        <div class="acoes">
+                            <a href="/admin/usuarios/<%= u.id %>/editar" class="botao botao-secundario">Editar</a>
+                            <form class="form-confirmar-exclusao" data-mensagem="Excluir o usuario <%= u.nome %>?" action="/admin/usuarios/<%= u.id %>?_method=DELETE" method="POST">
+                                <button type="submit" class="botao botao-perigo">Excluir</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+            <% }) %>
+        </tbody>
+    </table>
+</div>
+
+<%- include('../partials/footer') %>

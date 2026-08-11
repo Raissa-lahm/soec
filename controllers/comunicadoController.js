@@ -1,88 +1,70 @@
-// =====================================================================
-// SOEC - Controller de Comunicados
-// Salvar em: /controllers/comunicadoController.js
-// =====================================================================
+// =========================================================================
+// controllers/comunicadoController.js
+// CRUD completo de comunicados.
+// =========================================================================
 
-const comunicadoModel = require('../models/comunicadoModel');
+const ComunicadoModel = require('../models/comunicadoModel');
 
-module.exports = {
-  // Visão pública: lista de comunicados
-  async listar(req, res) {
-    try {
-      const comunicados = await comunicadoModel.listar();
-      res.render('comunicados', { comunicados });
-    } catch (erro) {
-      console.error('Erro ao listar comunicados:', erro);
-      res.status(500).render('erro', { titulo: 'Erro', mensagem: 'Não foi possível carregar os comunicados.' });
+const ComunicadoController = {
+
+    async listar(req, res, next) {
+        try {
+            const comunicados = await ComunicadoModel.listar();
+            res.render('comunicados/lista', { comunicados });
+        } catch (erro) {
+            next(erro);
+        }
+    },
+
+    exibirFormCriar(req, res) {
+        res.render('comunicados/form', { comunicado: null, acao: '/comunicados' });
+    },
+
+    async exibirFormEditar(req, res, next) {
+        try {
+            const comunicado = await ComunicadoModel.buscarPorId(req.params.id);
+            if (!comunicado) return res.redirect('/comunicados');
+            res.render('comunicados/form', { comunicado, acao: `/comunicados/${comunicado.id}?_method=PUT` });
+        } catch (erro) {
+            next(erro);
+        }
+    },
+
+    async criar(req, res, next) {
+        try {
+            const { titulo, descricao } = req.body;
+            if (!titulo) {
+                return res.status(400).render('comunicados/form', {
+                    comunicado: req.body,
+                    acao: '/comunicados',
+                    erro: 'O titulo do comunicado e obrigatorio.'
+                });
+            }
+            await ComunicadoModel.criar({ titulo, descricao, criado_por: req.session.usuario.id });
+            res.redirect('/comunicados');
+        } catch (erro) {
+            next(erro);
+        }
+    },
+
+    async atualizar(req, res, next) {
+        try {
+            const { titulo, descricao } = req.body;
+            await ComunicadoModel.atualizar(req.params.id, { titulo, descricao });
+            res.redirect('/comunicados');
+        } catch (erro) {
+            next(erro);
+        }
+    },
+
+    async excluir(req, res, next) {
+        try {
+            await ComunicadoModel.excluir(req.params.id);
+            res.redirect('/comunicados');
+        } catch (erro) {
+            next(erro);
+        }
     }
-  },
-
-  // ---------------- Área administrativa ----------------
-
-  async adminListar(req, res) {
-    try {
-      const comunicados = await comunicadoModel.listar();
-      res.render('admin/comunicados', { comunicados });
-    } catch (erro) {
-      console.error('Erro ao listar comunicados (admin):', erro);
-      res.status(500).render('erro', { titulo: 'Erro', mensagem: 'Não foi possível carregar os comunicados.' });
-    }
-  },
-
-  adminNovoForm(req, res) {
-    res.render('admin/comunicado_form', { comunicado: null, erro: null });
-  },
-
-  async adminCriar(req, res) {
-    try {
-      const { titulo, descricao } = req.body;
-
-      if (!titulo || !descricao) {
-        return res.render('admin/comunicado_form', { comunicado: req.body, erro: 'Preencha todos os campos.' });
-      }
-
-      await comunicadoModel.criar({ titulo, descricao, criado_por: req.session.usuario.id });
-      res.redirect('/admin/comunicados');
-    } catch (erro) {
-      console.error('Erro ao criar comunicado:', erro);
-      res.render('admin/comunicado_form', { comunicado: req.body, erro: 'Não foi possível publicar o comunicado.' });
-    }
-  },
-
-  async adminEditarForm(req, res) {
-    try {
-      const comunicado = await comunicadoModel.buscarPorId(req.params.id);
-      if (!comunicado) {
-        return res.status(404).render('erro', { titulo: 'Não encontrado', mensagem: 'Comunicado não encontrado.' });
-      }
-      res.render('admin/comunicado_form', { comunicado, erro: null });
-    } catch (erro) {
-      console.error('Erro ao carregar comunicado:', erro);
-      res.status(500).render('erro', { titulo: 'Erro', mensagem: 'Não foi possível carregar o comunicado.' });
-    }
-  },
-
-  async adminAtualizar(req, res) {
-    try {
-      const { titulo, descricao } = req.body;
-      if (!titulo || !descricao) {
-        return res.render('admin/comunicado_form', { comunicado: { id: req.params.id, ...req.body }, erro: 'Preencha todos os campos.' });
-      }
-      await comunicadoModel.atualizar(req.params.id, { titulo, descricao });
-      res.redirect('/admin/comunicados');
-    } catch (erro) {
-      console.error('Erro ao atualizar comunicado:', erro);
-      res.status(500).render('erro', { titulo: 'Erro', mensagem: 'Não foi possível atualizar o comunicado.' });
-    }
-  },
-
-  async adminExcluir(req, res) {
-    try {
-      await comunicadoModel.excluir(req.params.id);
-      res.redirect('/admin/comunicados');
-    } catch (erro) {
-      console.error('Erro ao excluir comunicado:', erro);
-      res.status(500).render('erro', { titulo: 'Erro', mensagem: 'Não foi possível excluir o comunicado.' });
-    }
-  }
 };
+
+module.exports = ComunicadoController;

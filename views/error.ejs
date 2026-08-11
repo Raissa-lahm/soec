@@ -1,0 +1,10 @@
+<% titulo = titulo || 'Erro' %>
+<%- include('partials/header') %>
+
+<div class="cartao" style="max-width:600px; margin: 2rem auto; text-align:center;">
+    <h2><%= titulo %></h2>
+    <p><%= mensagem %></p>
+    <a href="/" class="botao botao-primario">Voltar para o inicio</a>
+</div>
+
+<%- include('partials/footer') %>

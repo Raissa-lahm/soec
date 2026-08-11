@@ -1,0 +1,56 @@
+<% var titulo = 'Horarios' %>
+<%- include('partials/header') %>
+
+<div class="titulo-pagina">
+  <h1>Horários das turmas</h1>
+</div>
+<p>Confira abaixo o horário de aulas mais recente de cada curso.</p>
+
+<% if (erro) { %>
+  <div class="alerta alerta-erro"><%= erro %></div>
+<% } %>
+<% if (sucesso) { %>
+  <div class="alerta alerta-sucesso"><%= sucesso %></div>
+<% } %>
+
+<% const podeEditar = usuarioLogado && (usuarioLogado.perfil === 'COORDENACAO' || usuarioLogado.perfil === 'DIRECAO'); %>
+
+<div class="grade">
+  <% horarios.forEach(function(h) { %>
+    <div class="cartao">
+      <% if (h.arquivo_url) { %>
+        <span class="tag tag-dourada">Atualizado</span>
+      <% } else { %>
+        <span class="tag">Pendente</span>
+      <% } %>
+
+      <h3><%= h.curso %></h3>
+
+      <% if (h.arquivo_url) { %>
+        <p>
+          <a href="<%= h.arquivo_url %>" target="_blank" rel="noopener" class="botao botao-primario">
+            Ver horário (PDF)
+          </a>
+        </p>
+        <p style="font-size:0.85rem;color:#666;">
+          Atualizado em <%= new Date(h.atualizado_em).toLocaleDateString('pt-BR') %>
+        </p>
+      <% } else { %>
+        <p style="color:#666;">Horário ainda não disponível.</p>
+      <% } %>
+
+      <% if (podeEditar) { %>
+        <form action="/admin/horarios/enviar" method="POST" enctype="multipart/form-data" class="acoes" style="margin-top:0.8rem;border-top:1px solid #eee;padding-top:0.8rem;">
+          <input type="hidden" name="curso" value="<%= h.curso %>">
+          <input type="hidden" name="voltarPara" value="/horarios">
+          <input type="file" name="arquivo" accept="application/pdf" required class="input-arquivo">
+          <button type="submit" class="botao botao-secundario">
+            <%= h.arquivo_url ? 'Atualizar PDF' : 'Colocar horário' %>
+          </button>
+        </form>
+      <% } %>
+    </div>
+  <% }); %>
+</div>
+
+<%- include('partials/footer') %>

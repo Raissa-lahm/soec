@@ -1,0 +1,48 @@
+<% var titulo = 'Inscritos - ' + evento.titulo %>
+<%- include('../partials/header') %>
+
+<div class="titulo-pagina">
+    <div>
+        <h1>Inscritos no evento</h1>
+        <p><a href="/eventos/<%= evento.id %>">&larr; Voltar para <%= evento.titulo %></a></p>
+    </div>
+</div>
+
+<div class="cartao" style="margin-bottom: 1rem;">
+    <strong>Total de inscritos:</strong> <%= inscricoes.length %><%= evento.vagas_limite > 0 ? ' / ' + evento.vagas_limite : ' (sem limite de vagas)' %>
+</div>
+
+<% if (inscricoes.length === 0) { %>
+    <div class="cartao"><p>Nenhum inscrito neste evento ainda.</p></div>
+<% } else { %>
+    <div class="tabela-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Matricula</th>
+                    <th>Turma</th>
+                    <th>Data da inscricao</th>
+                    <th>Acoes</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% inscricoes.forEach(i => { %>
+                    <tr>
+                        <td><%= i.nome %></td>
+                        <td><%= i.matricula %></td>
+                        <td><%= i.turma || '-' %></td>
+                        <td><%= new Date(i.data_inscricao).toLocaleString('pt-BR') %></td>
+                        <td>
+                            <form class="form-confirmar-exclusao" data-mensagem="Remover a inscricao de <%= i.nome %>?" action="/inscricoes/<%= i.id %>?_method=DELETE" method="POST">
+                                <button type="submit" class="botao botao-perigo">Remover</button>
+                            </form>
+                        </td>
+                    </tr>
+                <% }) %>
+            </tbody>
+        </table>
+    </div>
+<% } %>
+
+<%- include('../partials/footer') %>

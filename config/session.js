@@ -1,21 +1,27 @@
-// =====================================================================
-// SOEC - Configuração da sessão de autenticação
-// Salvar em: /config/session.js
-//
-// Centraliza as opções do express-session para manter o app.js limpo
-// e facilitar ajustes futuros (ex: trocar para store em banco/Redis).
-// =====================================================================
+// =========================================================================
+// config/session.js
+// Configuracao do express-session.
+// Usamos o connect-pg-simple para guardar as sessoes na tabela "session"
+// do proprio PostgreSQL (em vez de guardar em memoria, o que se perderia
+// toda vez que o servidor reiniciasse).
+// =========================================================================
 
 require('dotenv').config();
 const session = require('express-session');
+const pgSession = require('connect-pg-simple')(session);
+const pool = require('./database');
 
 module.exports = session({
-  secret: process.env.SESSION_SECRET || 'segredo_padrao_trocar_em_producao',
-  resave: false,             // não salva a sessão se nada foi alterado
-  saveUninitialized: false,  // não cria sessão vazia para visitantes não logados
-  cookie: {
-    httpOnly: true,          // impede acesso ao cookie via JavaScript no navegador (proteção XSS)
-    secure: false,           // true apenas se o site rodar em HTTPS
-    maxAge: 1000 * 60 * 60 * 4 // sessão expira em 4 horas
-  }
+    store: new pgSession({
+        pool: pool,          // usa a mesma conexao do banco principal
+        tableName: 'session' // tabela criada no schema.sql
+    }),
+    secret: process.env.SESSION_SECRET, // usado para assinar o cookie
+    resave: false,               // nao regrava a sessao se nada mudou
+    saveUninitialized: false,    // nao cria sessao vazia para visitantes
+    cookie: {
+        httpOnly: true,           // cookie nao pode ser lido via JS no navegador
+        secure: process.env.NODE_ENV === 'production', // exige HTTPS em producao
+        maxAge: 1000 * 60 * 60 * 4 // sessao expira em 4 horas
+    }
 });

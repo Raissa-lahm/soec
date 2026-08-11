@@ -1,36 +1,33 @@
-// =====================================================================
-// SOEC - Configuração de conexão com o PostgreSQL
-// Salvar em: /config/database.js
-//
-// Usamos "pool" de conexões (em vez de criar uma conexão nova a cada
-// consulta), o que é a prática recomendada para aplicações Node + pg:
-// as conexões são reaproveitadas, melhorando desempenho e evitando
-// esgotar o limite de conexões do banco.
-// =====================================================================
+// =========================================================================
+// config/database.js
+// Responsavel por criar e exportar o "pool" de conexoes com o PostgreSQL.
+// Um pool reaproveita conexoes abertas, o que e muito mais eficiente do
+// que abrir/fechar uma conexao nova a cada consulta.
+// =========================================================================
 
-require('dotenv').config(); // carrega as variáveis do arquivo .env
+require('dotenv').config(); // carrega as variaveis do arquivo .env
 const { Pool } = require('pg');
 
+// Cria o pool usando os dados definidos no .env
 const pool = new Pool({
-  host: process.env.DB_HOST,
-  port: process.env.DB_PORT,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  max: 10,                     // número máximo de conexões simultâneas no pool
-  idleTimeoutMillis: 30000,    // tempo até fechar conexões ociosas
-  connectionTimeoutMillis: 5000
+    host: process.env.DB_HOST,
+    port: process.env.DB_PORT,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
 });
 
-// Testa a conexão assim que o servidor sobe, para avisar cedo se algo
-// estiver errado (credenciais, banco não criado, etc.)
-pool.connect((err, client, release) => {
-  if (err) {
-    console.error('❌ Erro ao conectar no PostgreSQL:', err.message);
-    return;
-  }
-  console.log('✅ Conectado ao PostgreSQL com sucesso.');
-  release(); // devolve a conexão de teste ao pool
-});
+// Testa a conexao assim que o servidor sobe, para avisar rapido se algo
+// estiver errado no .env (senha incorreta, banco nao existe, etc.)
+pool.connect()
+    .then((client) => {
+        console.log('[SOEC] Conectado ao PostgreSQL com sucesso.');
+        client.release();
+    })
+    .catch((err) => {
+        console.error('[SOEC] ERRO ao conectar no PostgreSQL:', err.message);
+    });
 
+// Exportamos o pool para ser usado pelos "models" com queries parametrizadas,
+// ex: pool.query('SELECT * FROM usuarios WHERE id = $1', [id])
 module.exports = pool;

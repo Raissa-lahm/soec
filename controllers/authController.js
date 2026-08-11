@@ -1,68 +1,84 @@
-// =====================================================================
-// SOEC - Controller de Autenticação
-// Salvar em: /controllers/authController.js
-// =====================================================================
+// =========================================================================
+// controllers/authController.js
+// Controla login e logout do sistema.
+// O login e feito por MATRICULA + SENHA (nao por email), conforme pedido.
+// =========================================================================
 
 const bcrypt = require('bcrypt');
-const usuarioModel = require('../models/usuarioModel');
+const UsuarioModel = require('../models/usuarioModel');
 
-module.exports = {
-  // Exibe a tela de login
-  exibirLogin(req, res) {
-    // Se já estiver logado, manda direto para a home
-    if (req.session.usuario) {
-      return res.redirect('/');
+const AuthController = {
+
+    // GET /login -> exibe o formulario de login
+    exibirLogin(req, res) {
+        // Se ja estiver logado, manda direto para a home
+        if (req.session.usuario) {
+            return res.redirect('/');
+        }
+        res.render('login', { erro: null, matricula: '' });
+    },
+
+    // POST /login -> processa a tentativa de login
+    async processarLogin(req, res, next) {
+        try {
+            const { matricula, senha } = req.body;
+
+            if (!matricula || !senha) {
+                return res.status(400).render('login', {
+                    erro: 'Preencha matricula e senha.',
+                    matricula: matricula || ''
+                });
+            }
+
+            const usuario = await UsuarioModel.buscarPorMatricula(matricula.trim());
+
+            if (!usuario) {
+                // Mensagem generica de proposito (nao revela se a matricula existe ou nao)
+                return res.status(401).render('login', {
+                    erro: 'Matricula ou senha invalidos.',
+                    matricula
+                });
+            }
+
+            const senhaValida = await bcrypt.compare(senha, usuario.senha);
+
+            if (!senhaValida) {
+                return res.status(401).render('login', {
+                    erro: 'Matricula ou senha invalidos.',
+                    matricula
+                });
+            }
+
+            // Guarda na sessao apenas os dados necessarios (nunca a senha!)
+            req.session.usuario = {
+                id: usuario.id,
+                nome: usuario.nome,
+                email: usuario.email,
+                matricula: usuario.matricula,
+                perfil: usuario.perfil,
+                curso: usuario.curso,
+                turma: usuario.turma
+            };
+
+            // Se o usuario tentou acessar uma pagina protegida antes do login,
+            // volta para ela. Senao, vai para a home.
+            const destino = req.session.redirectTo || '/';
+            delete req.session.redirectTo;
+
+            return res.redirect(destino);
+        } catch (erro) {
+            next(erro);
+        }
+    },
+
+    // POST /logout -> encerra a sessao
+    logout(req, res, next) {
+        req.session.destroy((erro) => {
+            if (erro) return next(erro);
+            res.clearCookie('connect.sid');
+            res.redirect('/login');
+        });
     }
-    res.render('login', { erro: null });
-  },
-
-  // Processa o formulário de login (matrícula + senha)
-  async processarLogin(req, res) {
-    try {
-      const { matricula, senha } = req.body;
-
-      if (!matricula || !senha) {
-        return res.render('login', { erro: 'Preencha matrícula e senha.' });
-      }
-
-      const usuario = await usuarioModel.buscarPorMatricula(matricula.trim());
-
-      if (!usuario) {
-        return res.render('login', { erro: 'Matrícula ou senha inválidos.' });
-      }
-
-      // Compara a senha digitada com o hash salvo no banco
-      const senhaCorreta = await bcrypt.compare(senha, usuario.senha);
-
-      if (!senhaCorreta) {
-        return res.render('login', { erro: 'Matrícula ou senha inválidos.' });
-      }
-
-      // Guarda na sessão apenas os dados necessários (nunca a senha/hash)
-      req.session.usuario = {
-        id: usuario.id,
-        nome: usuario.nome,
-        email: usuario.email,
-        matricula: usuario.matricula,
-        perfil: usuario.perfil,
-        curso: usuario.curso,
-        turma: usuario.turma
-      };
-
-      return res.redirect('/');
-    } catch (erro) {
-      console.error('Erro no login:', erro);
-      return res.render('login', { erro: 'Erro interno ao tentar fazer login. Tente novamente.' });
-    }
-  },
-
-  // Encerra a sessão do usuário
-  logout(req, res) {
-    req.session.destroy((erro) => {
-      if (erro) {
-        console.error('Erro ao encerrar sessão:', erro);
-      }
-      res.redirect('/login');
-    });
-  }
 };
+
+module.exports = AuthController;

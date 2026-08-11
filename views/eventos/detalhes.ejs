@@ -1,0 +1,56 @@
+<% var titulo = evento.titulo %>
+<%- include('../partials/header') %>
+
+<div class="titulo-pagina">
+    <div>
+        <span class="tag"><%= evento.tipo %></span>
+        <h1><%= evento.titulo %></h1>
+    </div>
+    <% if (usuarioLogado.perfil === 'COORDENACAO' || usuarioLogado.perfil === 'DIRECAO') { %>
+        <div class="acoes">
+            <a href="/eventos/<%= evento.id %>/editar" class="botao botao-secundario">Editar</a>
+            <a href="/eventos/<%= evento.id %>/inscricoes" class="botao botao-secundario">Ver inscritos</a>
+            <a href="/eventos/<%= evento.id %>/equipes" class="botao botao-secundario">Ver equipes</a>
+            <form class="form-confirmar-exclusao" data-mensagem="Excluir este evento? Essa acao nao pode ser desfeita." action="/eventos/<%= evento.id %>?_method=DELETE" method="POST">
+                <button type="submit" class="botao botao-perigo">Excluir</button>
+            </form>
+        </div>
+    <% } %>
+</div>
+
+<div class="cartao" style="max-width: 800px;">
+    <p><%= evento.descricao || 'Sem descricao.' %></p>
+    <p>
+        <strong>Data:</strong> <%= new Date(evento.data_evento).toLocaleString('pt-BR') %><br>
+        <strong>Local:</strong> <%= evento.local || 'A definir' %><br>
+        <strong>Vagas:</strong> <%= evento.vagas_limite > 0 ? evento.total_inscritos + ' / ' + evento.vagas_limite : 'Sem limite (' + evento.total_inscritos + ' inscritos)' %><br>
+        <strong>Organizado por:</strong> <%= evento.nome_criador %>
+    </p>
+
+    <% if (usuarioLogado.perfil === 'ALUNO' || usuarioLogado.perfil === 'PROFESSOR') { %>
+        <% if (jaInscrito) { %>
+            <div class="alerta alerta-sucesso">Voce esta inscrito(a) neste evento.</div>
+            <form action="/eventos/<%= evento.id %>/cancelar-inscricao" method="POST">
+                <button type="submit" class="botao botao-perigo">Cancelar minha inscricao</button>
+            </form>
+        <% } else { %>
+            <form action="/eventos/<%= evento.id %>/inscrever" method="POST">
+                <button type="submit" class="botao botao-primario">Inscrever-se neste evento</button>
+            </form>
+        <% } %>
+    <% } %>
+
+    <h3 style="margin-top: 1.6rem;">Equipes deste evento</h3>
+    <% if (equipes.length === 0) { %>
+        <p>Nenhuma equipe cadastrada para este evento ainda.</p>
+    <% } else { %>
+        <ul>
+            <% equipes.forEach(eq => { %>
+                <li><a href="/equipes/<%= eq.id %>"><%= eq.nome %></a> (<%= eq.modalidade || 'geral' %>) - <%= eq.total_membros %> membro(s)</li>
+            <% }) %>
+        </ul>
+    <% } %>
+    <a href="/eventos/<%= evento.id %>/equipes" class="botao botao-secundario">Ver todas as equipes</a>
+</div>
+
+<%- include('../partials/footer') %>

@@ -1,198 +1,162 @@
-// =====================================================================
-// SOEC - Controller de Eventos
-// Salvar em: /controllers/eventoController.js
-// =====================================================================
+// =========================================================================
+// controllers/eventoController.js
+// CRUD completo de eventos + pesquisa + filtro por categoria e data.
+// =========================================================================
 
-const eventoModel = require('../models/eventoModel');
-const inscricaoModel = require('../models/inscricaoModel');
-const equipeModel = require('../models/equipeModel');
+const EventoModel = require('../models/eventoModel');
+const InscricaoModel = require('../models/inscricaoModel');
+const EquipeModel = require('../models/equipeModel');
 
-module.exports = {
-  // Lista de eventos (com pesquisa por texto, filtro de categoria e data)
-  async listar(req, res) {
-    try {
-      const { busca, tipo, data } = req.query;
-      const eventos = await eventoModel.listar({ busca, tipo, data });
-      const tipos = await eventoModel.listarTipos();
+const EventoController = {
 
-      res.render('eventos/lista', {
-        eventos,
-        tipos,
-        filtros: { busca: busca || '', tipo: tipo || '', data: data || '' }
-      });
-    } catch (erro) {
-      console.error('Erro ao listar eventos:', erro);
-      res.status(500).render('erro', { titulo: 'Erro', mensagem: 'Não foi possível carregar os eventos.' });
-    }
-  },
+    // GET /eventos -> lista de eventos, com pesquisa e filtros via querystring
+    async listar(req, res, next) {
+        try {
+            const { pesquisa, tipo, data } = req.query;
+            const eventos = await EventoModel.listar({ pesquisa, tipo, data });
+            const tiposDisponiveis = await EventoModel.listarTiposDistintos();
 
-  // Detalhes de um evento específico + suas equipes
-  async detalhes(req, res) {
-    try {
-      const { id } = req.params;
-      const evento = await eventoModel.buscarPorId(id);
-
-      if (!evento) {
-        return res.status(404).render('erro', { titulo: 'Evento não encontrado', mensagem: 'Este evento não existe ou foi removido.' });
-      }
-
-      const usuario = req.session.usuario;
-      const equipes = await equipeModel.listarPorEvento(id);
-      const jaInscrito = usuario ? await inscricaoModel.jaInscrito(usuario.id, id) : false;
-
-      res.render('eventos/detalhes', { evento, equipes, jaInscrito });
-    } catch (erro) {
-      console.error('Erro ao exibir detalhes do evento:', erro);
-      res.status(500).render('erro', { titulo: 'Erro', mensagem: 'Não foi possível carregar o evento.' });
-    }
-  },
-
-  // Aluno se inscreve em um evento
-  async inscrever(req, res) {
-    try {
-      const { id } = req.params; // id do evento
-      const usuario = req.session.usuario;
-
-      const evento = await eventoModel.buscarPorId(id);
-      if (!evento) {
-        return res.status(404).render('erro', { titulo: 'Evento não encontrado', mensagem: 'Este evento não existe.' });
-      }
-
-      const jaInscrito = await inscricaoModel.jaInscrito(usuario.id, id);
-      if (jaInscrito) {
-        return res.redirect(`/eventos/${id}`);
-      }
-
-      // Verifica limite de vagas, se houver
-      if (evento.vagas_limite) {
-        const totalInscritos = await inscricaoModel.contarPorEvento(id);
-        if (totalInscritos >= evento.vagas_limite) {
-          return res.render('erro', { titulo: 'Vagas esgotadas', mensagem: 'Este evento não possui mais vagas disponíveis.' });
+            res.render('eventos/lista', {
+                eventos,
+                tiposDisponiveis,
+                filtros: { pesquisa: pesquisa || '', tipo: tipo || '', data: data || '' }
+            });
+        } catch (erro) {
+            next(erro);
         }
-      }
+    },
 
-      await inscricaoModel.criar({ usuario_id: usuario.id, evento_id: id });
-      res.redirect(`/eventos/${id}`);
-    } catch (erro) {
-      console.error('Erro ao se inscrever no evento:', erro);
-      res.status(500).render('erro', { titulo: 'Erro', mensagem: 'Não foi possível concluir a inscrição.' });
+    // GET /eventos/:id -> detalhes do evento + equipes + status de inscricao do usuario
+    async detalhes(req, res, next) {
+        try {
+            const evento = await EventoModel.buscarPorId(req.params.id);
+            if (!evento) {
+                return res.status(404).render('error', {
+                    titulo: 'Evento nao encontrado',
+                    mensagem: 'O evento solicitado nao existe ou foi removido.',
+                    usuarioLogado: req.session.usuario
+                });
+            }
+
+            const usuario = req.session.usuario;
+            const jaInscrito = usuario
+                ? await InscricaoModel.jaInscrito(usuario.id, evento.id)
+                : false;
+
+            const equipes = await EquipeModel.listarPorEvento(evento.id);
+
+            res.render('eventos/detalhes', { evento, jaInscrito, equipes });
+        } catch (erro) {
+            next(erro);
+        }
+    },
+
+    // GET /eventos/novo/form -> formulario de criacao (somente gestao)
+    exibirFormCriar(req, res) {
+        res.render('eventos/form', { evento: null, acao: '/eventos' });
+    },
+
+    // GET /eventos/:id/editar -> formulario de edicao (somente gestao)
+    async exibirFormEditar(req, res, next) {
+        try {
+            const evento = await EventoModel.buscarPorId(req.params.id);
+            if (!evento) return res.redirect('/eventos');
+            res.render('eventos/form', { evento, acao: `/eventos/${evento.id}?_method=PUT` });
+        } catch (erro) {
+            next(erro);
+        }
+    },
+
+    // POST /eventos -> cria um novo evento
+    async criar(req, res, next) {
+        try {
+            const { titulo, descricao, tipo, data_evento, local, vagas_limite } = req.body;
+
+            if (!titulo || !tipo || !data_evento) {
+                return res.status(400).render('eventos/form', {
+                    evento: req.body,
+                    acao: '/eventos',
+                    erro: 'Preencha ao menos titulo, tipo e data do evento.'
+                });
+            }
+
+            await EventoModel.criar({
+                titulo, descricao, tipo, data_evento, local,
+                vagas_limite: parseInt(vagas_limite, 10) || 0,
+                criado_por: req.session.usuario.id
+            });
+
+            res.redirect('/eventos');
+        } catch (erro) {
+            next(erro);
+        }
+    },
+
+    // PUT /eventos/:id -> atualiza um evento existente
+    async atualizar(req, res, next) {
+        try {
+            const { titulo, descricao, tipo, data_evento, local, vagas_limite } = req.body;
+            await EventoModel.atualizar(req.params.id, {
+                titulo, descricao, tipo, data_evento, local,
+                vagas_limite: parseInt(vagas_limite, 10) || 0
+            });
+            res.redirect(`/eventos/${req.params.id}`);
+        } catch (erro) {
+            next(erro);
+        }
+    },
+
+    // DELETE /eventos/:id -> exclui um evento
+    async excluir(req, res, next) {
+        try {
+            await EventoModel.excluir(req.params.id);
+            res.redirect('/eventos');
+        } catch (erro) {
+            next(erro);
+        }
+    },
+
+    // POST /eventos/:id/inscrever -> aluno se inscreve em um evento
+    async inscrever(req, res, next) {
+        try {
+            const evento = await EventoModel.buscarPorId(req.params.id);
+            const usuario = req.session.usuario;
+
+            if (!evento) return res.redirect('/eventos');
+
+            const jaInscrito = await InscricaoModel.jaInscrito(usuario.id, evento.id);
+            if (jaInscrito) {
+                return res.redirect(`/eventos/${evento.id}`);
+            }
+
+            // Verifica limite de vagas (0 = sem limite)
+            if (evento.vagas_limite > 0) {
+                const totalInscritos = await InscricaoModel.contarInscritos(evento.id);
+                if (totalInscritos >= evento.vagas_limite) {
+                    return res.status(400).render('error', {
+                        titulo: 'Vagas esgotadas',
+                        mensagem: 'Este evento ja atingiu o limite maximo de vagas.',
+                        usuarioLogado: usuario
+                    });
+                }
+            }
+
+            await InscricaoModel.criar(usuario.id, evento.id);
+            res.redirect(`/eventos/${evento.id}`);
+        } catch (erro) {
+            next(erro);
+        }
+    },
+
+    // POST /eventos/:id/cancelar-inscricao -> aluno cancela sua propria inscricao
+    async cancelarInscricao(req, res, next) {
+        try {
+            await InscricaoModel.cancelar(req.session.usuario.id, req.params.id);
+            res.redirect(`/eventos/${req.params.id}`);
+        } catch (erro) {
+            next(erro);
+        }
     }
-  },
-
-  // Aluno cancela a própria inscrição
-  async cancelarInscricao(req, res) {
-    try {
-      const { id } = req.params; // id do evento
-      const usuario = req.session.usuario;
-      await inscricaoModel.cancelar(usuario.id, id);
-      res.redirect(`/eventos/${id}`);
-    } catch (erro) {
-      console.error('Erro ao cancelar inscrição:', erro);
-      res.status(500).render('erro', { titulo: 'Erro', mensagem: 'Não foi possível cancelar a inscrição.' });
-    }
-  },
-
-  // ---------------- Área administrativa (Coordenação/Direção) ----------------
-
-  async adminListar(req, res) {
-    try {
-      const eventos = await eventoModel.listar({});
-      res.render('admin/eventos', { eventos });
-    } catch (erro) {
-      console.error('Erro ao listar eventos (admin):', erro);
-      res.status(500).render('erro', { titulo: 'Erro', mensagem: 'Não foi possível carregar os eventos.' });
-    }
-  },
-
-  adminNovoForm(req, res) {
-    res.render('admin/evento_form', { evento: null, erro: null });
-  },
-
-  async adminCriar(req, res) {
-    try {
-      const { titulo, descricao, tipo, data_evento, local, vagas_limite } = req.body;
-
-      if (!titulo || !tipo || !data_evento) {
-        return res.render('admin/evento_form', { evento: req.body, erro: 'Preencha os campos obrigatórios: título, tipo e data.' });
-      }
-
-      await eventoModel.criar({
-        titulo, descricao, tipo, data_evento, local,
-        vagas_limite: vagas_limite ? parseInt(vagas_limite, 10) : null,
-        criado_por: req.session.usuario.id
-      });
-
-      res.redirect('/admin/eventos');
-    } catch (erro) {
-      console.error('Erro ao criar evento:', erro);
-      res.render('admin/evento_form', { evento: req.body, erro: 'Não foi possível criar o evento. Verifique os dados.' });
-    }
-  },
-
-  async adminEditarForm(req, res) {
-    try {
-      const evento = await eventoModel.buscarPorId(req.params.id);
-      if (!evento) {
-        return res.status(404).render('erro', { titulo: 'Evento não encontrado', mensagem: 'Este evento não existe.' });
-      }
-      res.render('admin/evento_form', { evento, erro: null });
-    } catch (erro) {
-      console.error('Erro ao carregar evento para edição:', erro);
-      res.status(500).render('erro', { titulo: 'Erro', mensagem: 'Não foi possível carregar o evento.' });
-    }
-  },
-
-  async adminAtualizar(req, res) {
-    try {
-      const { id } = req.params;
-      const { titulo, descricao, tipo, data_evento, local, vagas_limite } = req.body;
-
-      if (!titulo || !tipo || !data_evento) {
-        return res.render('admin/evento_form', { evento: { id, ...req.body }, erro: 'Preencha os campos obrigatórios.' });
-      }
-
-      await eventoModel.atualizar(id, {
-        titulo, descricao, tipo, data_evento, local,
-        vagas_limite: vagas_limite ? parseInt(vagas_limite, 10) : null
-      });
-
-      res.redirect('/admin/eventos');
-    } catch (erro) {
-      console.error('Erro ao atualizar evento:', erro);
-      res.status(500).render('erro', { titulo: 'Erro', mensagem: 'Não foi possível atualizar o evento.' });
-    }
-  },
-
-  async adminExcluir(req, res) {
-    try {
-      await eventoModel.excluir(req.params.id);
-      res.redirect('/admin/eventos');
-    } catch (erro) {
-      console.error('Erro ao excluir evento:', erro);
-      res.status(500).render('erro', { titulo: 'Erro', mensagem: 'Não foi possível excluir o evento.' });
-    }
-  },
-
-  // Lista as inscrições de um evento específico (gerenciamento administrativo)
-  async adminInscricoes(req, res) {
-    try {
-      const evento = await eventoModel.buscarPorId(req.params.id);
-      const inscricoes = await inscricaoModel.listarPorEvento(req.params.id);
-      res.render('admin/inscricoes', { evento, inscricoes });
-    } catch (erro) {
-      console.error('Erro ao listar inscrições:', erro);
-      res.status(500).render('erro', { titulo: 'Erro', mensagem: 'Não foi possível carregar as inscrições.' });
-    }
-  },
-
-  async adminExcluirInscricao(req, res) {
-    try {
-      const { eventoId, inscricaoId } = req.params;
-      await inscricaoModel.excluirPorId(inscricaoId);
-      res.redirect(`/admin/eventos/${eventoId}/inscricoes`);
-    } catch (erro) {
-      console.error('Erro ao excluir inscrição:', erro);
-      res.status(500).render('erro', { titulo: 'Erro', mensagem: 'Não foi possível excluir a inscrição.' });
-    }
-  }
 };
+
+module.exports = EventoController;

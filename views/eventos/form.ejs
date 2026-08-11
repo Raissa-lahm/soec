@@ -1,0 +1,54 @@
+<% var titulo = evento ? 'Editar evento' : 'Novo evento' %>
+<%- include('../partials/header') %>
+
+<div class="titulo-pagina">
+    <h1><%= titulo %></h1>
+</div>
+
+<div class="form-cartao">
+    <% if (typeof erro !== 'undefined' && erro) { %>
+        <div class="alerta alerta-erro"><%= erro %></div>
+    <% } %>
+
+    <form action="<%= acao %>" method="POST">
+        <div class="campo">
+            <label for="titulo">Titulo *</label>
+            <input type="text" id="titulo" name="titulo" value="<%= evento ? evento.titulo : '' %>" required>
+        </div>
+
+        <div class="campo">
+            <label for="descricao">Descricao</label>
+            <textarea id="descricao" name="descricao" rows="4"><%= evento ? (evento.descricao || '') : '' %></textarea>
+        </div>
+
+        <div class="linha-form">
+            <div class="campo">
+                <label for="tipo">Categoria/Tipo *</label>
+                <input type="text" id="tipo" name="tipo" placeholder="Ex: ESPORTIVO, CULTURAL, ACADEMICO" value="<%= evento ? evento.tipo : '' %>" required>
+            </div>
+            <div class="campo">
+                <label for="vagas_limite">Limite de vagas (0 = sem limite)</label>
+                <input type="number" id="vagas_limite" name="vagas_limite" min="0" value="<%= evento ? evento.vagas_limite : 0 %>">
+            </div>
+        </div>
+
+        <div class="linha-form">
+            <div class="campo">
+                <label for="data_evento">Data e hora *</label>
+                <input type="datetime-local" id="data_evento" name="data_evento"
+                       value="<%= evento ? new Date(evento.data_evento).toISOString().slice(0,16) : '' %>" required>
+            </div>
+            <div class="campo">
+                <label for="local">Local</label>
+                <input type="text" id="local" name="local" value="<%= evento ? (evento.local || '') : '' %>">
+            </div>
+        </div>
+
+        <div class="acoes">
+            <button type="submit" class="botao botao-primario">Salvar</button>
+            <a href="/eventos" class="botao botao-secundario">Cancelar</a>
+        </div>
+    </form>
+</div>
+
+<%- include('../partials/footer') %>
