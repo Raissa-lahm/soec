@@ -1,0 +1,60 @@
+<% var titulo = 'Gerenciar Horarios' %>
+<%- include('../partials/header') %>
+
+<div class="titulo-pagina">
+  <h1>Gerenciar horários das turmas</h1>
+</div>
+<p>Envie ou atualize o PDF de horário de cada curso. Ao enviar um novo
+   arquivo para um curso que já tem PDF, o arquivo anterior é substituído.</p>
+
+<% if (erro) { %>
+  <div class="alerta alerta-erro"><%= erro %></div>
+<% } %>
+<% if (sucesso) { %>
+  <div class="alerta alerta-sucesso"><%= sucesso %></div>
+<% } %>
+
+<div class="tabela-wrapper">
+  <table>
+    <thead>
+      <tr>
+        <th>Curso</th>
+        <th>PDF atual</th>
+        <th>Última atualização</th>
+        <th>Enviar / atualizar</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% horarios.forEach(function(h) { %>
+        <tr>
+          <td><%= h.curso %></td>
+          <td>
+            <% if (h.arquivo_url) { %>
+              <a href="<%= h.arquivo_url %>" target="_blank" rel="noopener"><%= h.arquivo_nome_original || 'Ver PDF' %></a>
+            <% } else { %>
+              <em>Nenhum PDF enviado</em>
+            <% } %>
+          </td>
+          <td>
+            <% if (h.atualizado_em) { %>
+              <%= new Date(h.atualizado_em).toLocaleDateString('pt-BR') %>
+              <% if (h.atualizado_por_nome) { %> por <%= h.atualizado_por_nome %><% } %>
+            <% } else { %>
+              —
+            <% } %>
+          </td>
+          <td>
+            <form action="/admin/horarios/enviar" method="POST" enctype="multipart/form-data" class="acoes">
+              <input type="hidden" name="curso" value="<%= h.curso %>">
+              <input type="hidden" name="curso" value="<%= h.curso %>">
+              <input type="file" name="arquivo" accept="application/pdf" required class="input-arquivo">
+              <button type="submit" class="botao botao-primario">Enviar</button>
+            </form>
+          </td>
+        </tr>
+      <% }); %>
+    </tbody>
+  </table>
+</div>
+
+<%- include('../partials/footer') %>

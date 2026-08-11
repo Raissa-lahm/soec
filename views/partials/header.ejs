@@ -18,23 +18,23 @@
     <div class="cabecalho-conteudo">
         <a href="/" class="marca">SOEC <span class="destaque">CIMOL</span></a>
         <nav class="nav-principal">
-            <a href="/" class="<%= rotaAtual === '/' ? 'ativo' : '' %>">Inicio</a>
-            <a href="/calendario" class="<%= rotaAtual && rotaAtual.startsWith('/calendario') ? 'ativo' : '' %>">Calendario</a>
-            <a href="/eventos" class="<%= rotaAtual && rotaAtual.startsWith('/eventos') ? 'ativo' : '' %>">Eventos</a>
-            <a href="/comunicados" class="<%= rotaAtual && rotaAtual.startsWith('/comunicados') ? 'ativo' : '' %>">Comunicados</a>
-            <a href="/regulamentos" class="<%= rotaAtual && rotaAtual.startsWith('/regulamentos') ? 'ativo' : '' %>">Regulamentos</a>
-            <% if (usuarioLogado.perfil === 'ALUNO') { %>
-                <a href="/minhas-inscricoes" class="<%= rotaAtual && rotaAtual.startsWith('/minhas-inscricoes') ? 'ativo' : '' %>">Minhas inscricoes</a>
-            <% } %>
-            <% if (usuarioLogado.perfil === 'COORDENACAO' || usuarioLogado.perfil === 'DIRECAO') { %>
-                <a href="/admin" class="<%= rotaAtual && rotaAtual.startsWith('/admin') ? 'ativo' : '' %>">Area administrativa</a>
-            <% } %>
-            <span class="usuario-tag"><%= usuarioLogado.nome %> (<%= usuarioLogado.perfil %>)</span>
-            <form action="/logout" method="POST" style="display:inline;">
-                <button type="submit">Sair</button>
-            </form>
-        </nav>
-    </div>
+    <a href="/" class="<%= rotaAtual === '/' ? 'ativo' : '' %>">Inicio</a>
+    <a href="/calendario" class="<%= rotaAtual && rotaAtual.startsWith('/calendario') ? 'ativo' : '' %>">Calendario</a>
+    <a href="/eventos" class="<%= rotaAtual && rotaAtual.startsWith('/eventos') ? 'ativo' : '' %>">Eventos</a>
+    <a href="/comunicados" class="<%= rotaAtual && rotaAtual.startsWith('/comunicados') ? 'ativo' : '' %>">Comunicados</a>
+    <a href="/regulamentos" class="<%= rotaAtual && rotaAtual.startsWith('/regulamentos') ? 'ativo' : '' %>">Regulamentos</a>
+    <a href="/horarios" class="<%= rotaAtual && rotaAtual.startsWith('/horarios') ? 'ativo' : '' %>">Horarios</a>
+    <% if (usuarioLogado.perfil === 'ALUNO') { %>
+        <a href="/minhas-inscricoes" class="<%= rotaAtual && rotaAtual.startsWith('/minhas-inscricoes') ? 'ativo' : '' %>">Minhas inscricoes</a>
+    <% } %>
+    <% if (usuarioLogado.perfil === 'COORDENACAO' || usuarioLogado.perfil === 'DIRECAO') { %>
+        <a href="/admin" class="<%= rotaAtual && rotaAtual.startsWith('/admin') ? 'ativo' : '' %>">Area administrativa</a>
+    <% } %>
+    <span class="usuario-tag"><%= usuarioLogado.nome %> (<%= usuarioLogado.perfil %>)</span>
+    <form action="/logout" method="POST" style="display:inline;">
+        <button type="submit">Sair</button>
+    </form>
+</nav>
 </header>
 <% } %>
 

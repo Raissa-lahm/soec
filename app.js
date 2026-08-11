@@ -23,6 +23,7 @@ const regulamentoRoutes = require('./routes/regulamentoRoutes');
 const inscricaoRoutes = require('./routes/inscricaoRoutes');
 const equipeRoutes = require('./routes/equipeRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const horarioRoutes = require('./routes/horarioRoutes');
 
 const app = express();
 
@@ -69,6 +70,7 @@ app.use('/', regulamentoRoutes);
 app.use('/', inscricaoRoutes);
 app.use('/', equipeRoutes);
 app.use('/', adminRoutes);
+app.use('/', horarioRoutes);
 
 // -------------------------------------------------------------------
 // Tratamento de erros (SEMPRE por ultimo)
