@@ -149,3 +149,23 @@ VALUES
  ('Professor Exemplo', 'professor@cimol.edu.br', '0003', '$2b$10$YDJjJ6dMKDPuXIgAwenkFOMSUj3.Xwn2ZDb2gsu/xaje4xPsmONGq', 'PROFESSOR', 'Tecnico em Informatica', NULL),
  ('Aluno Exemplo', 'aluno@cimol.edu.br', '2024001', '$2b$10$YDJjJ6dMKDPuXIgAwenkFOMSUj3.Xwn2ZDb2gsu/xaje4xPsmONGq', 'ALUNO', 'Tecnico em Informatica', '3A')
 ON CONFLICT (matricula) DO NOTHING;
+
+
+CREATE TABLE horarios (
+  id SERIAL PRIMARY KEY,
+  curso VARCHAR(100) UNIQUE NOT NULL,
+  arquivo_url VARCHAR(255),
+  arquivo_nome_original VARCHAR(255),
+  atualizado_em TIMESTAMP,
+  atualizado_por INTEGER REFERENCES usuarios(id)
+);
+
+INSERT INTO horarios (curso) VALUES
+  ('Eletrônica'),
+  ('Eletrotécnica'),
+  ('Mecânica'),
+  ('Design de Móveis'),
+  ('Móveis'),
+  ('Inform'),
+  ('Curso 7'),
+  ('Curso 8');
