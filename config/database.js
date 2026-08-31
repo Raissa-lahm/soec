@@ -21,9 +21,9 @@ const pool = new Pool({
     database: process.env.DB_NAME,
     // PostgreSQL local normalmente nao usa SSL. Para provedores em nuvem,
     // defina DB_SSL=true no .env para habilita-lo.
-    ssl: process.env.DB_SSL === 'true'
-        ? { rejectUnauthorized: false }
-        : false
+    ssl: {
+        rejectUnauthorized: false
+    }
 });
 
 // Testa a conexao assim que o servidor sobe
