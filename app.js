@@ -27,6 +27,8 @@ const horarioRoutes = require('./routes/horarioRoutes');
 
 const app = express();
 
+app.set('trust proxy', 1);
+
 // -------------------------------------------------------------------
 // Configuracao do motor de views (EJS)
 // -------------------------------------------------------------------
