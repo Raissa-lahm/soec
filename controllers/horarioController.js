@@ -18,7 +18,7 @@ module.exports = {
       });
     } catch (erro) {
       console.error('Erro ao listar horários:', erro);
-      res.status(500).render('erro', { titulo: 'Erro', mensagem: 'Não foi possível carregar os horários.' });
+      res.status(500).render('error', { titulo: 'Erro', mensagem: 'Não foi possível carregar os horários.' });
     }
   },
 
