@@ -3,7 +3,7 @@
 
 <div class="titulo-pagina">
     <h1>Usuarios</h1>
-    <a href="/admin/usuarios/novo/form" class="botao botao-primario">+ Novo usuario</a>
+    <a href="/admin/usuarios/novo/form" class="botao botao-primario">+ Novo usuário</a>
 </div>
 
 <% if (typeof erro !== 'undefined' && erro) { %>
@@ -17,8 +17,8 @@
             <option value="">Todos</option>
             <option value="ALUNO" <%= filtroPerfil === 'ALUNO' ? 'selected' : '' %>>Aluno</option>
             <option value="PROFESSOR" <%= filtroPerfil === 'PROFESSOR' ? 'selected' : '' %>>Professor</option>
-            <option value="COORDENACAO" <%= filtroPerfil === 'COORDENACAO' ? 'selected' : '' %>>Coordenacao</option>
-            <option value="DIRECAO" <%= filtroPerfil === 'DIRECAO' ? 'selected' : '' %>>Direcao</option>
+            <option value="COORDENACAO" <%= filtroPerfil === 'COORDENACAO' ? 'selected' : '' %>>Coordenação</option>
+            <option value="DIRECAO" <%= filtroPerfil === 'DIRECAO' ? 'selected' : '' %>>Direção</option>
         </select>
     </div>
 </form>
@@ -28,11 +28,11 @@
         <thead>
             <tr>
                 <th>Nome</th>
-                <th>Matricula</th>
+                <th>Matrícula</th>
                 <th>Email</th>
                 <th>Perfil</th>
                 <th>Curso/Turma</th>
-                <th>Acoes</th>
+                <th>Ações</th>
             </tr>
         </thead>
         <tbody>

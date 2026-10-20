@@ -10,7 +10,7 @@
     <div class="tela-login">
         <div class="login-cartao">
             <h1>SOEC</h1>
-            <p class="subtitulo">Sistema de Organizacao de Eventos do CIMOL</p>
+            <p class="subtitulo">Sistema de Organização de Eventos do CIMOL</p>
 
             <% if (erro) { %>
                 <div class="alerta alerta-erro"><%= erro %></div>
@@ -18,7 +18,7 @@
 
             <form action="/login" method="POST">
                 <div class="campo">
-                    <label for="matricula">Matricula</label>
+                    <label for="matricula">Matrícula</label>
                     <input type="text" id="matricula" name="matricula" value="<%= matricula %>" required autofocus>
                 </div>
                 <div class="campo">

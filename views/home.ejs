@@ -7,7 +7,7 @@
 
 <div class="grade">
     <div class="cartao">
-        <h3>Proximos eventos</h3>
+        <h3>Próximos eventos</h3>
         <% if (proximosEventos.length === 0) { %>
             <p>Nenhum evento futuro cadastrado no momento.</p>
         <% } else { %>
@@ -23,7 +23,7 @@
     </div>
 
     <div class="cartao">
-        <h3>Ultimos comunicados</h3>
+        <h3>Últimos comunicados</h3>
         <% if (comunicados.length === 0) { %>
             <p>Nenhum comunicado publicado ainda.</p>
         <% } else { %>
@@ -38,12 +38,12 @@
     </div>
 
     <div class="cartao">
-        <h3>Acesso rapido</h3>
+        <h3>Acesso rápido</h3>
         <div class="acoes" style="flex-direction: column;">
-            <a href="/calendario" class="botao botao-primario">Calendario institucional</a>
+            <a href="/calendario" class="botao botao-primario">Calendário institucional</a>
             <a href="/regulamentos" class="botao botao-secundario">Regulamentos</a>
             <% if (usuarioLogado.perfil === 'ALUNO') { %>
-                <a href="/minhas-inscricoes" class="botao botao-secundario">Minhas inscricoes</a>
+                <a href="/minhas-inscricoes" class="botao botao-secundario">Minhas inscrições</a>
             <% } %>
         </div>
     </div>

@@ -9,11 +9,11 @@
     <% } %>
     <form action="<%= acao %>" method="POST">
         <div class="campo">
-            <label for="titulo">Titulo *</label>
+            <label for="titulo">Título *</label>
             <input type="text" id="titulo" name="titulo" value="<%= regulamento ? regulamento.titulo : '' %>" required>
         </div>
         <div class="campo">
-            <label for="descricao">Descricao</label>
+            <label for="descricao">Descrição</label>
             <textarea id="descricao" name="descricao" rows="5"><%= regulamento ? (regulamento.descricao || '') : '' %></textarea>
         </div>
         <div class="campo">

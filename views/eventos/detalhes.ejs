@@ -31,7 +31,7 @@
         <% if (jaInscrito) { %>
             <div class="alerta alerta-sucesso">Voce esta inscrito(a) neste evento.</div>
             <form action="/eventos/<%= evento.id %>/cancelar-inscricao" method="POST">
-                <button type="submit" class="botao botao-perigo">Cancelar minha inscricao</button>
+                <button type="submit" class="botao botao-perigo">Cancelar minha inscrição</button>
             </form>
         <% } else { %>
             <form action="/eventos/<%= evento.id %>/inscrever" method="POST">
