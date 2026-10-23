@@ -24,7 +24,7 @@
         <strong>Data:</strong> <%= new Date(evento.data_evento).toLocaleString('pt-BR') %><br>
         <strong>Local:</strong> <%= evento.local || 'A definir' %><br>
         <strong>Vagas:</strong> <%= evento.vagas_limite > 0 ? evento.total_inscritos + ' / ' + evento.vagas_limite : 'Sem limite (' + evento.total_inscritos + ' inscritos)' %><br>
-        <strong>Organizado por:</strong> <%= evento.nome_criador %>
+        <strong>Organizado por:</strong> <%= evento.nome_criador.replace(/\bDirecao\b/g, 'Direção') %>
     </p>
 
     <% if (usuarioLogado.perfil === 'ALUNO' || usuarioLogado.perfil === 'PROFESSOR') { %>

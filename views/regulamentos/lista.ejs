@@ -19,7 +19,7 @@
                 <% if (r.arquivo_url) { %>
                     <p><a href="<%= r.arquivo_url %>" target="_blank" rel="noopener">Abrir arquivo do regulamento</a></p>
                 <% } %>
-                <p><small>Publicado em <%= new Date(r.criado_em).toLocaleDateString('pt-BR') %> por <%= r.nome_criador %></small></p>
+                <p><small>Publicado em <%= new Date(r.criado_em).toLocaleDateString('pt-BR') %> por <%= r.nome_criador.replace(/\bDirecao\b/g, 'Direção') %></small></p>
                 <% if (usuarioLogado.perfil === 'COORDENACAO' || usuarioLogado.perfil === 'DIRECAO') { %>
                     <div class="acoes">
                         <a href="/regulamentos/<%= r.id %>/editar" class="botao botao-secundario">Editar</a>
