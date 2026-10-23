@@ -17,7 +17,10 @@
 <header class="cabecalho">
     <div class="cabecalho-conteudo">
         <a href="/" class="marca">SOEC <span class="destaque">CIMOL</span></a>
-        <nav class="nav-principal">
+        <button class="menu-mobile-toggle" type="button" aria-expanded="false" aria-controls="nav-principal" aria-label="Abrir menu">
+            <span></span><span></span><span></span>
+        </button>
+        <nav class="nav-principal" id="nav-principal">
     <a href="/" class="<%= rotaAtual === '/' ? 'ativo' : '' %>">Início</a>
     <a href="/calendario" class="<%= rotaAtual && rotaAtual.startsWith('/calendario') ? 'ativo' : '' %>">Calendário</a>
     <a href="/eventos" class="<%= rotaAtual && rotaAtual.startsWith('/eventos') ? 'ativo' : '' %>">Eventos</a>
