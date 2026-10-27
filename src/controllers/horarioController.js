@@ -1,6 +1,6 @@
 // =====================================================================
 // SOEC - Controller de Horários das Turmas
-// Salvar em: /controllers/horarioController.js
+// Salvar em: /src/controllers/horarioController.js
 // =====================================================================
 
 const horarioModel = require('../models/horarioModel');

@@ -1,13 +1,13 @@
 // =====================================================================
 // SOEC - Middleware de upload do PDF de horários
-// Salvar em: /middleware/uploadHorarioMiddleware.js
+// Salvar em: /src/middlewares/uploadHorarioMiddleware.js
 // =====================================================================
 
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
-const pastaDestino = path.join(__dirname, '..', 'public', 'uploads', 'horarios');
+const pastaDestino = path.join(__dirname, '..', '..', 'public', 'uploads', 'horarios');
 
 if (!fs.existsSync(pastaDestino)) {
   fs.mkdirSync(pastaDestino, { recursive: true });
