@@ -1,6 +1,6 @@
 // =====================================================================
 // SOEC - Rotas de Horários das Turmas
-// Salvar em: /routes/horarioRoutes.js
+// Salvar em: /src/routes/horarioRoutes.js
 // =====================================================================
 
 const express = require('express');

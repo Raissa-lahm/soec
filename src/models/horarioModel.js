@@ -1,6 +1,6 @@
 // =====================================================================
 // SOEC - Model de Horários das Turmas
-// Salvar em: /models/horarioModel.js
+// Salvar em: /src/models/horarioModel.js
 // =====================================================================
 
 const pool = require('../config/database');
