@@ -34,7 +34,7 @@
                         <td><%= i.turma || '-' %></td>
                         <td><%= new Date(i.data_inscricao).toLocaleString('pt-BR') %></td>
                         <td>
-                            <form class="form-confirmar-exclusao" data-mensagem="Remover a inscricao de <%= i.nome %>?" action="/inscricoes/<%= i.id %>?_method=DELETE" method="POST">
+                            <form class="form-confirmar-exclusao" data-mensagem="Remover a inscrição de <%= i.nome %>?" action="/inscricoes/<%= i.id %>?_method=DELETE" method="POST">
                                 <button type="submit" class="botao botao-perigo">Remover</button>
                             </form>
                         </td>

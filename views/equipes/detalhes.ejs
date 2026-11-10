@@ -49,10 +49,10 @@
     <% } %>
 
     <% if (usuarioLogado.perfil === 'COORDENACAO' || usuarioLogado.perfil === 'DIRECAO') { %>
-        <h3 style="margin-top: 1.4rem;">Adicionar membro pela matricula</h3>
+        <h3 style="margin-top: 1.4rem;">Adicionar membro pela matrícula</h3>
         <form action="/equipes/<%= equipe.id %>/membros" method="POST" class="linha-form">
             <div class="campo">
-                <input type="text" name="matricula" placeholder="Matricula do aluno/professor" required>
+                <input type="text" name="matricula" placeholder="Matrícula do aluno/professor" required>
             </div>
             <div class="campo" style="flex: 0;">
                 <button type="submit" class="botao botao-primario">Adicionar</button>

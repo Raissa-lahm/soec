@@ -17,6 +17,23 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Tela de codigos de ativacao: o botao "Baixar CSV" gera o arquivo no
+    // proprio navegador a partir do texto guardado no atributo data-csv
+    // (nada e enviado ao servidor e o codigo nao fica salvo em lugar nenhum)
+    const botaoCsv = document.getElementById('baixar-codigos');
+    if (botaoCsv) {
+        botaoCsv.addEventListener('click', (evento) => {
+            evento.preventDefault();
+            // \uFEFF no inicio faz o Excel abrir o CSV com os acentos corretos
+            const arquivo = new Blob(['\uFEFF' + botaoCsv.dataset.csv], { type: 'text/csv;charset=utf-8' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(arquivo);
+            link.download = 'codigos-ativacao-soec.csv';
+            link.click();
+            URL.revokeObjectURL(link.href);
+        });
+    }
+
     // Qualquer formulario com a classe "form-confirmar-exclusao" pede
     // confirmacao antes de enviar (usado nos botoes de excluir do sistema)
     document.querySelectorAll('.form-confirmar-exclusao').forEach((form) => {
