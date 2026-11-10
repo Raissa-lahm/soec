@@ -1,8 +1,8 @@
-<% var titulo = 'Gerenciar usuarios' %>
+<% var titulo = 'Gerenciar usuários' %>
 <%- include('../partials/header') %>
 
 <div class="titulo-pagina">
-    <h1>Usuarios</h1>
+    <h1>Usuários</h1>
     <div class="acoes">
         <a href="/admin/usuarios/importar" class="botao botao-secundario">Importar planilha</a>
         <a href="/admin/usuarios/novo/form" class="botao botao-primario">+ Novo usuário</a>
@@ -54,7 +54,7 @@
                             <form class="form-confirmar-exclusao" data-mensagem="<%= u.pendente ? 'Gerar novo código para ' + u.nome + '?' : 'Gerar novo código para ' + u.nome + '? A senha atual será apagada e a pessoa terá que criar outra.' %>" action="/admin/usuarios/<%= u.id %>/codigo" method="POST">
                                 <button type="submit" class="botao botao-secundario"><%= u.pendente ? 'Novo código' : 'Redefinir senha' %></button>
                             </form>
-                            <form class="form-confirmar-exclusao" data-mensagem="Excluir o usuario <%= u.nome %>?" action="/admin/usuarios/<%= u.id %>?_method=DELETE" method="POST">
+                            <form class="form-confirmar-exclusao" data-mensagem="Excluir o usuário <%= u.nome %>?" action="/admin/usuarios/<%= u.id %>?_method=DELETE" method="POST">
                                 <button type="submit" class="botao botao-perigo">Excluir</button>
                             </form>
                         </div>

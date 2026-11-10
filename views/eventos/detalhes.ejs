@@ -11,7 +11,7 @@
             <a href="/eventos/<%= evento.id %>/editar" class="botao botao-secundario">Editar</a>
             <a href="/eventos/<%= evento.id %>/inscricoes" class="botao botao-secundario">Ver inscritos</a>
             <a href="/eventos/<%= evento.id %>/equipes" class="botao botao-secundario">Ver equipes</a>
-            <form class="form-confirmar-exclusao" data-mensagem="Excluir este evento? Essa acao nao pode ser desfeita." action="/eventos/<%= evento.id %>?_method=DELETE" method="POST">
+            <form class="form-confirmar-exclusao" data-mensagem="Excluir este evento? Essa ação não pode ser desfeita." action="/eventos/<%= evento.id %>?_method=DELETE" method="POST">
                 <button type="submit" class="botao botao-perigo">Excluir</button>
             </form>
         </div>
@@ -19,7 +19,7 @@
 </div>
 
 <div class="cartao" style="max-width: 800px;">
-    <p><%= evento.descricao || 'Sem descricao.' %></p>
+    <p><%= evento.descricao || 'Sem descrição.' %></p>
     <p>
         <strong>Data:</strong> <%= new Date(evento.data_evento).toLocaleString('pt-BR') %><br>
         <strong>Local:</strong> <%= evento.local || 'A definir' %><br>
@@ -29,7 +29,7 @@
 
     <% if (usuarioLogado.perfil === 'ALUNO' || usuarioLogado.perfil === 'PROFESSOR') { %>
         <% if (jaInscrito) { %>
-            <div class="alerta alerta-sucesso">Voce esta inscrito(a) neste evento.</div>
+            <div class="alerta alerta-sucesso">Você está inscrito(a) neste evento.</div>
             <form action="/eventos/<%= evento.id %>/cancelar-inscricao" method="POST">
                 <button type="submit" class="botao botao-perigo">Cancelar minha inscrição</button>
             </form>
