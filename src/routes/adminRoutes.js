@@ -8,12 +8,19 @@ const router = express.Router();
 const UsuarioController = require('../controllers/usuarioController');
 const autenticado = require('../middlewares/authMiddleware');
 const { somenteGestao } = require('../middlewares/permissaoMiddleware');
+const uploadUsuarios = require('../middlewares/uploadUsuariosMiddleware');
 
 router.get('/admin', autenticado, somenteGestao, UsuarioController.dashboard);
 
 router.get('/admin/usuarios', autenticado, somenteGestao, UsuarioController.listar);
 router.get('/admin/usuarios/novo/form', autenticado, somenteGestao, UsuarioController.exibirFormCriar);
 router.post('/admin/usuarios', autenticado, somenteGestao, UsuarioController.criar);
+// Importacao em massa (planilha) e novo codigo de primeiro acesso.
+// "importar" vem antes das rotas com :id para nao ser confundido com um id.
+router.get('/admin/usuarios/importar', autenticado, somenteGestao, UsuarioController.exibirImportacao);
+router.post('/admin/usuarios/importar', autenticado, somenteGestao, uploadUsuarios.single('arquivo'), UsuarioController.importar);
+router.post('/admin/usuarios/:id/codigo', autenticado, somenteGestao, UsuarioController.gerarNovoCodigo);
+
 router.get('/admin/usuarios/:id/editar', autenticado, somenteGestao, UsuarioController.exibirFormEditar);
 router.put('/admin/usuarios/:id', autenticado, somenteGestao, UsuarioController.atualizar);
 router.delete('/admin/usuarios/:id', autenticado, somenteGestao, UsuarioController.excluir);

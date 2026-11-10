@@ -32,10 +32,13 @@ CREATE TABLE IF NOT EXISTS usuarios (
     nome         VARCHAR(150)      NOT NULL,
     email        VARCHAR(150)      NOT NULL UNIQUE,
     matricula    VARCHAR(30)       NOT NULL UNIQUE,
-    senha        VARCHAR(255)      NOT NULL, -- hash bcrypt, nunca texto puro
+    senha        VARCHAR(255),              -- hash bcrypt, nunca texto puro. NULL = conta ainda nao ativada (primeiro acesso)
     perfil       perfil_usuario    NOT NULL DEFAULT 'ALUNO',
     curso        VARCHAR(100),
     turma        VARCHAR(50),
+    codigo_ativacao_hash VARCHAR(64),       -- hash do codigo de primeiro acesso (nunca o codigo em si)
+    codigo_expira_em     TIMESTAMP,         -- validade do codigo
+    tentativas_ativacao  INTEGER NOT NULL DEFAULT 0, -- erros de codigo; ao atingir o limite o codigo e bloqueado
     criado_em    TIMESTAMP         NOT NULL DEFAULT NOW()
 );
 
@@ -166,6 +169,6 @@ INSERT INTO horarios (curso) VALUES
   ('Mecânica'),
   ('Design de Móveis'),
   ('Móveis'),
-  ('Inform'),
-  ('Curso 7'),
-  ('Curso 8');
+  ('Informática'),
+  ('Química'),
+  ('Meio Ambiente');
