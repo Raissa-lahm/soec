@@ -1,0 +1,56 @@
+<%- include('../partials/header') %>
+
+<div class="titulo-pagina"><h1><%= titulo %></h1></div>
+
+<div class="alerta alerta-erro">
+    Anote ou baixe os códigos agora: eles <strong>não ficam salvos</strong> e não poderão ser vistos de novo.
+    Se alguém perder o código, gere outro na lista de usuários.
+</div>
+
+<% if (criados.length > 0) { %>
+    <div class="acoes" style="margin-bottom:1rem;">
+        <a href="#" id="baixar-codigos" class="botao botao-primario" data-csv="<%= csv %>">Baixar CSV</a>
+        <button type="button" class="botao botao-secundario" onclick="window.print()">Imprimir</button>
+    </div>
+
+    <div class="tabela-wrapper">
+        <table>
+            <thead>
+                <tr><th>Nome</th><th>Matrícula</th><th>Código de ativação</th></tr>
+            </thead>
+            <tbody>
+                <% criados.forEach(c => { %>
+                    <tr>
+                        <td><%= c.nome %></td>
+                        <td><%= c.matricula %></td>
+                        <td><strong><%= c.codigo %></strong></td>
+                    </tr>
+                <% }) %>
+            </tbody>
+        </table>
+    </div>
+<% } else { %>
+    <p>Nenhum usuário foi criado.</p>
+<% } %>
+
+<% if (ignorados.length > 0) { %>
+    <h2 style="margin-top:2rem;">Linhas ignoradas (<%= ignorados.length %>)</h2>
+    <div class="tabela-wrapper">
+        <table>
+            <thead>
+                <tr><th>Nome</th><th>Matrícula</th><th>Motivo</th></tr>
+            </thead>
+            <tbody>
+                <% ignorados.forEach(i => { %>
+                    <tr><td><%= i.nome %></td><td><%= i.matricula %></td><td><%= i.motivo %></td></tr>
+                <% }) %>
+            </tbody>
+        </table>
+    </div>
+<% } %>
+
+<div class="acoes" style="margin-top:1.5rem;">
+    <a href="/admin/usuarios" class="botao botao-secundario">Voltar para usuários</a>
+</div>
+
+<%- include('../partials/footer') %>
