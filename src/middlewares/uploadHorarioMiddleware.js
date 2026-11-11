@@ -1,7 +1,7 @@
-// =====================================================================
+
 // SOEC - Middleware de upload do PDF de horários
 // Salvar em: /src/middlewares/uploadHorarioMiddleware.js
-// =====================================================================
+
 
 const multer = require('multer');
 const path = require('path');

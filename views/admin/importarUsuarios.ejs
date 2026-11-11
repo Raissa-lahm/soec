@@ -1,0 +1,38 @@
+<% var titulo = 'Importar usuários' %>
+<%- include('../partials/header') %>
+
+<div class="titulo-pagina"><h1>Importar usuários</h1></div>
+
+<div class="form-cartao">
+    <% if (typeof erro !== 'undefined' && erro) { %>
+        <div class="alerta alerta-erro"><%= erro %></div>
+    <% } %>
+
+    <p>Cada pessoa importada fica com a conta <strong>aguardando primeiro acesso</strong> e recebe um
+    <strong>código de ativação</strong>. Os códigos aparecem uma única vez na tela seguinte: entregue
+    um a cada pessoa. Quem já está cadastrado não é alterado.</p>
+
+    <p>Colunas, nesta ordem (separadas por <code>;</code> ou tabulação):<br>
+    <code>nome ; matrícula ; email ; perfil ; curso ; turma</code><br>
+    Perfil: ALUNO, PROFESSOR, COORDENACAO ou DIRECAO (vazio = ALUNO). Curso e turma são opcionais.
+    A primeira linha pode ser o cabeçalho.</p>
+
+    <form action="/admin/usuarios/importar" method="POST" enctype="multipart/form-data">
+        <div class="campo">
+            <label for="arquivo">Arquivo CSV</label>
+            <input type="file" id="arquivo" name="arquivo" accept=".csv,.txt">
+        </div>
+
+        <div class="campo">
+            <label for="dados">ou cole as linhas da planilha aqui</label>
+            <textarea id="dados" name="dados" rows="8" placeholder="Maria Silva;2025001;maria@email.com;ALUNO;Informática;2A"></textarea>
+        </div>
+
+        <div class="acoes">
+            <button type="submit" class="botao botao-primario">Importar</button>
+            <a href="/admin/usuarios" class="botao botao-secundario">Cancelar</a>
+        </div>
+    </form>
+</div>
+
+<%- include('../partials/footer') %>

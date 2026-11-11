@@ -10,6 +10,9 @@ const { MAX_TENTATIVAS, conferirCodigo } = require('../utils/ativacao');
 
 const SALT_ROUNDS = 10;
 const SENHA_MINIMA = 8;
+const SENHA_MAXIMA = 72; // limite do bcrypt: acima disso o resto da senha seria ignorado
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const MATRICULA_REGEX = /^[\w.-]{3,30}$/; // letras, numeros, ponto, hifen e underline
 
 const AuthController = {
 
@@ -75,6 +78,103 @@ const AuthController = {
             delete req.session.redirectTo;
 
             return res.redirect(destino);
+        } catch (erro) {
+            next(erro);
+        }
+    },
+
+    // GET /cadastro -> formulario de cadastro publico
+    exibirCadastro(req, res) {
+        if (req.session.usuario) {
+            return res.redirect('/');
+        }
+        res.render('cadastro', { erro: null, dados: {} });
+    },
+
+    // POST /cadastro -> qualquer pessoa da escola cria a propria conta e ja entra.
+    // O PERFIL NUNCA vem do formulario: todo cadastro publico nasce como ALUNO.
+    // Professor, coordenacao e direcao so sao definidos pela gestao (area admin).
+    async processarCadastro(req, res, next) {
+        try {
+            const nome = String(req.body.nome || '').trim();
+            const matricula = String(req.body.matricula || '').trim();
+            const email = String(req.body.email || '').trim().toLowerCase();
+            const curso = String(req.body.curso || '').trim();
+            const turma = String(req.body.turma || '').trim();
+            const senha = String(req.body.senha || '');
+            const confirmarSenha = String(req.body.confirmarSenha || '');
+
+            // Devolve os dados digitados (menos as senhas) para a pessoa nao redigitar tudo
+            const dados = { nome, matricula, email, curso, turma };
+            const recusar = (erro) => res.status(400).render('cadastro', { erro, dados });
+
+            if (!nome || !matricula || !email || !senha || !confirmarSenha) {
+                return recusar('Preencha nome, matrícula, email e senha.');
+            }
+            if (nome.length < 3 || nome.length > 150) {
+                return recusar('Informe seu nome completo.');
+            }
+            if (!MATRICULA_REGEX.test(matricula)) {
+                return recusar('Matrícula inválida. Use de 3 a 30 caracteres, sem espaços.');
+            }
+            if (!EMAIL_REGEX.test(email) || email.length > 150) {
+                return recusar('Email inválido.');
+            }
+            if (curso.length > 100 || turma.length > 50) {
+                return recusar('Curso ou turma muito longos.');
+            }
+            if (senha.length < SENHA_MINIMA || senha.length > SENHA_MAXIMA) {
+                return recusar(`A senha precisa ter entre ${SENHA_MINIMA} e ${SENHA_MAXIMA} caracteres.`);
+            }
+            if (senha !== confirmarSenha) {
+                return recusar('As senhas não conferem.');
+            }
+
+            // Avisos separados: a pessoa precisa saber QUAL dado ja esta em uso
+            const AVISO_MATRICULA =
+                'Esta matrícula já está cadastrada. Se for a sua, entre pelo login. ' +
+                'Se você não criou essa conta, procure a coordenação.';
+            const AVISO_EMAIL =
+                'Este email já está sendo usado em outra conta. Use outro email ou entre pelo login.';
+
+            if (await UsuarioModel.buscarPorMatricula(matricula)) {
+                return recusar(AVISO_MATRICULA);
+            }
+            if (await UsuarioModel.buscarPorEmail(email)) {
+                return recusar(AVISO_EMAIL);
+            }
+
+            const senhaHash = await bcrypt.hash(senha, SALT_ROUNDS);
+
+            let novo;
+            try {
+                novo = await UsuarioModel.criar({
+                    nome, email, matricula, senhaHash,
+                    perfil: 'ALUNO',
+                    curso: curso || null,
+                    turma: turma || null
+                });
+            } catch (erroBanco) {
+                // 23505 = violacao de UNIQUE: duas pessoas cadastraram a mesma
+                // matricula/email ao mesmo tempo (a checagem acima nao pegou)
+                if (erroBanco.code === '23505') {
+                    return recusar(String(erroBanco.constraint).includes('email') ? AVISO_EMAIL : AVISO_MATRICULA);
+                }
+                throw erroBanco;
+            }
+
+            // Ja deixa a pessoa logada (mesmos dados de sessao do login)
+            req.session.usuario = {
+                id: novo.id,
+                nome: novo.nome,
+                email: novo.email,
+                matricula: novo.matricula,
+                perfil: novo.perfil,
+                curso: novo.curso,
+                turma: novo.turma
+            };
+
+            return res.redirect('/');
         } catch (erro) {
             next(erro);
         }
