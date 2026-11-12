@@ -105,36 +105,29 @@ const UsuarioModel = {
         return resultado.rows[0];
     },
 
-    // Dados que a tela de primeiro acesso precisa para validar
-    async buscarParaAtivacao(matricula) {
+    // A matrícula precisa estar na lista escolar autorizada e corresponder
+    // ao nome pré-cadastrado. Importações administrativas não liberam acesso.
+    async buscarParaAtivacao(matricula, nome) {
         const resultado = await pool.query(
-            `SELECT id,
-                    (senha IS NULL) AS pendente,
-                    codigo_ativacao_hash,
-                    tentativas_ativacao,
-                    (codigo_expira_em IS NOT NULL AND codigo_expira_em > NOW()) AS codigo_valido
-             FROM usuarios WHERE matricula = $1`,
-            [matricula]
+            `SELECT u.id, (u.senha IS NULL) AS pendente
+             FROM usuarios u
+             JOIN matriculas_autorizadas a
+               ON a.matricula = u.matricula
+              AND LOWER(BTRIM(a.nome)) = LOWER(BTRIM(u.nome))
+             WHERE u.matricula = $1
+               AND LOWER(BTRIM(a.nome)) = LOWER(BTRIM($2))`,
+            [matricula, nome]
         );
         return resultado.rows[0];
     },
 
-    // Conta mais um erro de codigo (ao chegar no limite o codigo e bloqueado)
-    async registrarTentativaFalha(id) {
-        await pool.query(
-            'UPDATE usuarios SET tentativas_ativacao = tentativas_ativacao + 1 WHERE id = $1',
-            [id]
-        );
-    },
-
-    // Define a senha pela primeira vez e invalida o codigo.
-    // O "AND senha IS NULL" garante que so funciona uma vez: se a conta ja foi
-    // ativada (ou duas requisicoes chegarem juntas), a segunda nao altera nada.
+    // Define a senha uma única vez para uma conta autorizada ainda pendente.
     async ativarConta(id, senhaHash) {
         const resultado = await pool.query(
             `UPDATE usuarios
-             SET senha = $1, codigo_ativacao_hash = NULL, codigo_expira_em = NULL, tentativas_ativacao = 0
+             SET senha = $1
              WHERE id = $2 AND senha IS NULL
+               AND matricula IN (SELECT matricula FROM matriculas_autorizadas)
              RETURNING id`,
             [senhaHash, id]
         );

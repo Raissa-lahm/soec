@@ -42,6 +42,13 @@ CREATE TABLE IF NOT EXISTS usuarios (
     criado_em    TIMESTAMP         NOT NULL DEFAULT NOW()
 );
 
+-- Matrículas que podem criar senha no primeiro acesso. No protótipo contém
+-- somente exemplos; depois será ligada ao cadastro oficial da escola.
+CREATE TABLE IF NOT EXISTS matriculas_autorizadas (
+    matricula VARCHAR(30) PRIMARY KEY,
+    nome VARCHAR(150) NOT NULL
+);
+
 -- -------------------------------------------------------------------------
 -- Tabela: eventos
 -- -------------------------------------------------------------------------
@@ -151,6 +158,21 @@ VALUES
  ('Coordenador Geral', 'coordenacao@cimol.edu.br', '0002', '$2b$10$YDJjJ6dMKDPuXIgAwenkFOMSUj3.Xwn2ZDb2gsu/xaje4xPsmONGq', 'COORDENACAO', NULL, NULL),
  ('Professor Exemplo', 'professor@cimol.edu.br', '0003', '$2b$10$YDJjJ6dMKDPuXIgAwenkFOMSUj3.Xwn2ZDb2gsu/xaje4xPsmONGq', 'PROFESSOR', 'Tecnico em Informatica', NULL),
  ('Aluno Exemplo', 'aluno@cimol.edu.br', '2024001', '$2b$10$YDJjJ6dMKDPuXIgAwenkFOMSUj3.Xwn2ZDb2gsu/xaje4xPsmONGq', 'ALUNO', 'Tecnico em Informatica', '3A')
+ON CONFLICT (matricula) DO NOTHING;
+
+INSERT INTO matriculas_autorizadas (matricula, nome) VALUES
+    ('5000184', 'Raissa de Oliveira Lahm'),
+    ('6735227', 'Sofia Rodrigues Santos'),
+    ('6704944', 'Rafael Bazotti'),
+    ('5081504', 'Nicolas Cavallari')
+ON CONFLICT (matricula) DO NOTHING;
+
+INSERT INTO usuarios (nome, email, matricula, senha, perfil)
+VALUES
+    ('Raissa de Oliveira Lahm', 'raissa.lahm@example.invalid', '5000184', NULL, 'ALUNO'),
+    ('Sofia Rodrigues Santos', 'sofia.santos@example.invalid', '6735227', NULL, 'ALUNO'),
+    ('Rafael Bazotti', 'rafael.bazotti@example.invalid', '6704944', NULL, 'ALUNO'),
+    ('Nicolas Cavallari', 'nicolas.cavallari@example.invalid', '5081504', NULL, 'ALUNO')
 ON CONFLICT (matricula) DO NOTHING;
 
 

@@ -6,7 +6,6 @@
 
 const bcrypt = require('bcrypt');
 const UsuarioModel = require('../models/usuarioModel');
-const { MAX_TENTATIVAS, conferirCodigo } = require('../utils/ativacao');
 
 const SALT_ROUNDS = 10;
 const SENHA_MINIMA = 8;
@@ -185,55 +184,41 @@ const AuthController = {
         if (req.session.usuario) {
             return res.redirect('/');
         }
-        res.render('primeiroAcesso', { erro: null, matricula: '' });
+        res.render('primeiroAcesso', { erro: null, nome: '', matricula: '' });
     },
 
-    // POST /primeiro-acesso -> valida matricula + codigo e grava a senha
+    // POST /primeiro-acesso -> valida matrícula autorizada e grava a senha
     async processarPrimeiroAcesso(req, res, next) {
         try {
-            const { matricula, codigo, senha, confirmarSenha } = req.body;
+            const { nome, matricula, senha, confirmarSenha } = req.body;
+            const nomeLimpo = String(nome || '').trim();
             const matriculaLimpa = String(matricula || '').trim();
 
             const recusar = (status, erro) =>
-                res.status(status).render('primeiroAcesso', { erro, matricula: matriculaLimpa });
+                res.status(status).render('primeiroAcesso', { erro, nome: nomeLimpo, matricula: matriculaLimpa });
 
-            if (!matriculaLimpa || !codigo || !senha || !confirmarSenha) {
+            if (!nomeLimpo || !matriculaLimpa || !senha || !confirmarSenha) {
                 return recusar(400, 'Preencha todos os campos.');
             }
-            if (senha.length < SENHA_MINIMA) {
-                return recusar(400, `A senha precisa ter pelo menos ${SENHA_MINIMA} caracteres.`);
+            if (senha.length < SENHA_MINIMA || senha.length > SENHA_MAXIMA) {
+                return recusar(400, `A senha precisa ter entre ${SENHA_MINIMA} e ${SENHA_MAXIMA} caracteres.`);
             }
             if (senha !== confirmarSenha) {
                 return recusar(400, 'As senhas não conferem.');
             }
 
-            // Mensagem unica para todos os motivos de recusa: assim a tela nao
-            // revela se a matricula existe, ja foi ativada ou se o codigo expirou
-            const MENSAGEM_GENERICA =
-                'Não foi possível ativar a conta. Confira a matrícula e o código. ' +
-                'Se o código expirou, foi bloqueado ou a conta já foi ativada, procure a coordenação.';
-
-            const conta = await UsuarioModel.buscarParaAtivacao(matriculaLimpa);
-
-            // Conta inexistente, ja ativada, sem codigo valido ou bloqueada por tentativas
-            if (!conta || !conta.pendente || !conta.codigo_valido
-                || conta.tentativas_ativacao >= MAX_TENTATIVAS) {
-                return recusar(400, MENSAGEM_GENERICA);
+            const mensagemGenerica =
+                'Não foi possível ativar a conta. Confira se a matrícula está autorizada e ainda não foi ativada.';
+            const conta = await UsuarioModel.buscarParaAtivacao(matriculaLimpa, nomeLimpo);
+            if (!conta || !conta.pendente) {
+                return recusar(400, mensagemGenerica);
             }
 
-            // Codigo errado: conta a tentativa (apos MAX_TENTATIVAS erros o codigo trava)
-            if (!conferirCodigo(codigo, matriculaLimpa, conta.codigo_ativacao_hash)) {
-                await UsuarioModel.registrarTentativaFalha(conta.id);
-                return recusar(400, MENSAGEM_GENERICA);
-            }
-
-            // Tudo certo: grava a senha com bcrypt e invalida o codigo
             const senhaHash = await bcrypt.hash(senha, SALT_ROUNDS);
             const ativada = await UsuarioModel.ativarConta(conta.id, senhaHash);
             if (!ativada) {
-                return recusar(400, MENSAGEM_GENERICA);
+                return recusar(400, mensagemGenerica);
             }
-
             req.session.mensagemLogin = 'Senha criada com sucesso! Entre com sua matrícula e senha.';
             return res.redirect('/login');
         } catch (erro) {

@@ -11,6 +11,7 @@
         <div class="login-cartao">
             <h1>SOEC</h1>
             <p class="subtitulo">Primeiro acesso: crie sua senha</p>
+            <p>Informe o nome e a matrícula cadastrados pela escola.</p>
 
             <% if (erro) { %>
                 <div class="alerta alerta-erro"><%= erro %></div>
@@ -18,13 +19,12 @@
 
             <form action="/primeiro-acesso" method="POST" autocomplete="off">
                 <div class="campo">
-                    <label for="matricula">Matrícula</label>
-                    <input type="text" id="matricula" name="matricula" value="<%= matricula %>" required autofocus>
+                    <label for="nome">Nome completo</label>
+                    <input type="text" id="nome" name="nome" value="<%= nome || '' %>" maxlength="150" required autofocus>
                 </div>
                 <div class="campo">
-                    <label for="codigo">Código de ativação</label>
-                    <input type="text" id="codigo" name="codigo" placeholder="Ex.: ABCD-EFGH" maxlength="12" style="text-transform:uppercase;" required>
-                    <small>O código é entregue pela coordenação da escola.</small>
+                    <label for="matricula">Matrícula</label>
+                    <input type="text" id="matricula" name="matricula" value="<%= matricula %>" required>
                 </div>
                 <div class="campo">
                     <label for="senha">Nova senha (mínimo 8 caracteres)</label>

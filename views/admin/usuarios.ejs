@@ -4,7 +4,6 @@
 <div class="titulo-pagina">
     <h1>Usuários</h1>
     <div class="acoes">
-        <a href="/admin/usuarios/importar" class="botao botao-secundario">Importar planilha</a>
         <a href="/admin/usuarios/novo/form" class="botao botao-primario">+ Novo usuário</a>
     </div>
 </div>
@@ -13,7 +12,7 @@
     <div class="alerta alerta-erro"><%= erro %></div>
 <% } %>
 
-<form class="barra-filtros" method="GET" action="/admin/usuarios">
+                            <form class="barra-filtros" method="GET" action="/admin/usuarios">
     <div class="campo">
         <label for="perfil">Filtrar por perfil</label>
         <select id="perfil" name="perfil" onchange="this.form.submit()">
@@ -47,13 +46,10 @@
                     <td><%= u.email %></td>
                     <td><span class="tag"><%= u.perfil %></span></td>
                     <td><%= u.curso || '-' %> <%= u.turma ? '/ ' + u.turma : '' %></td>
-                    <td><span class="tag <%= u.pendente ? 'tag-dourada' : '' %>"><%= u.pendente ? 'Aguardando 1º acesso' : 'Ativa' %></span></td>
+                    <td><span class="tag <%= u.pendente ? 'tag-dourada' : '' %>"><%= u.pendente ? 'Aguardando primeiro acesso' : 'Ativa' %></span></td>
                     <td>
                         <div class="acoes">
                             <a href="/admin/usuarios/<%= u.id %>/editar" class="botao botao-secundario">Editar</a>
-                            <form class="form-confirmar-exclusao" data-mensagem="<%= u.pendente ? 'Gerar novo código para ' + u.nome + '?' : 'Gerar novo código para ' + u.nome + '? A senha atual será apagada e a pessoa terá que criar outra.' %>" action="/admin/usuarios/<%= u.id %>/codigo" method="POST">
-                                <button type="submit" class="botao botao-secundario"><%= u.pendente ? 'Novo código' : 'Redefinir senha' %></button>
-                            </form>
                             <form class="form-confirmar-exclusao" data-mensagem="Excluir o usuário <%= u.nome %>?" action="/admin/usuarios/<%= u.id %>?_method=DELETE" method="POST">
                                 <button type="submit" class="botao botao-perigo">Excluir</button>
                             </form>
