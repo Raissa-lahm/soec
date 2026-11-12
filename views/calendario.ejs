@@ -2,27 +2,40 @@
 <%- include('partials/header') %>
 
 <div class="titulo-pagina">
-    <h1>Calendário institucional</h1>
+    <h1>Calend&aacute;rio institucional</h1>
 </div>
 
-<% const meses = Object.keys(eventosPorMes) %>
-<% if (meses.length === 0) { %>
-    <div class="cartao"><p>Nenhum evento cadastrado ainda.</p></div>
-<% } else { %>
-    <% meses.forEach(mes => { %>
-        <div class="mes-titulo"><%= mes %></div>
-        <% eventosPorMes[mes].forEach(evento => { %>
-            <div class="evento-linha">
-                <div>
-                    <span class="tag tag-dourada"><%= evento.tipo %></span>
-                    <a href="/eventos/<%= evento.id %>"><strong><%= evento.titulo %></strong></a>
-                </div>
-                <div>
-                    <small><%= new Date(evento.data_evento).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) %> - <%= evento.local || 'Local a definir' %></small>
-                </div>
-            </div>
+<section class="calendario" aria-label="Calendario institucional">
+    <div class="calendario-cabecalho">
+        <a class="calendario-seta" href="/calendario?mes=<%= mesAnterior.mes %>&amp;ano=<%= mesAnterior.ano %>" aria-label="Mes anterior">&#8592;</a>
+        <h2><%= mesNome %></h2>
+        <a class="calendario-seta" href="/calendario?mes=<%= mesProximo.mes %>&amp;ano=<%= mesProximo.ano %>" aria-label="Proximo mes">&#8594;</a>
+    </div>
+
+    <div class="calendario-grade" role="grid" aria-label="<%= mesNome %>">
+        <% ['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SAB'].forEach(dia => { %>
+            <div class="calendario-semana-dia" role="columnheader"><%= dia %></div>
         <% }) %>
-    <% }) %>
-<% } %>
+        <% semanas.forEach(semana => { %>
+            <% semana.forEach(celula => { %>
+                <div class="calendario-celula <%= celula.estaNoMes ? '' : 'fora-do-mes' %> <%= celula.ehHoje ? 'hoje' : '' %>" role="gridcell">
+                    <span class="calendario-numero"><%= celula.dia %></span>
+                    <div class="calendario-eventos">
+                        <% celula.eventos.forEach(evento => { %>
+                            <a class="evento-calendario" href="/eventos/<%= evento.id %>" title="<%= evento.titulo %> - <%= evento.horario %>">
+                                <span class="evento-horario"><%= evento.horario %></span>
+                                <span class="evento-nome"><%= evento.titulo %></span>
+                            </a>
+                        <% }) %>
+                    </div>
+                </div>
+            <% }) %>
+        <% }) %>
+    </div>
+
+    <% if (!temEventos) { %>
+        <p class="calendario-vazio">Nenhum evento neste mes.</p>
+    <% } %>
+</section>
 
 <%- include('partials/footer') %>

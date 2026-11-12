@@ -46,10 +46,14 @@ const EventoModel = {
         return resultado.rows;
     },
 
-    // Lista eventos futuros para o calendario institucional
+    // Lista eventos para o calendario institucional
     async listarParaCalendario() {
         const resultado = await pool.query(
-            `SELECT id, titulo, tipo, data_evento, local
+            `SELECT id, titulo, tipo, local,
+                    EXTRACT(YEAR FROM data_evento)::int AS ano,
+                    EXTRACT(MONTH FROM data_evento)::int AS mes,
+                    EXTRACT(DAY FROM data_evento)::int AS dia,
+                    TO_CHAR(data_evento, 'HH24:MI') AS horario
              FROM eventos
              ORDER BY data_evento ASC`
         );

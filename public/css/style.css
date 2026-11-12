@@ -301,26 +301,129 @@ tr:hover td { background: #f7f9f8; }
 
 /* ------------------------------ Calendario ------------------------------ */
 
-.mes-titulo {
-    background: var(--cor-primaria);
-    color: var(--cor-branco);
-    padding: 0.5rem 1rem;
-    border-radius: 6px;
-    margin: 1.4rem 0 0.6rem;
+.calendario {
+    width: 100%;
+    overflow: hidden;
+    background: var(--cor-branco);
+    border-radius: var(--raio);
+    box-shadow: var(--sombra);
+}
+
+.calendario-cabecalho {
+    display: grid;
+    grid-template-columns: 44px 1fr 44px;
+    align-items: center;
+    padding: 0.45rem 0.75rem;
+    background: #f3f4f6;
+}
+
+.calendario-cabecalho h2 {
+    margin: 0;
+    text-align: center;
+    font-size: 1.1rem;
     text-transform: capitalize;
 }
 
-.evento-linha {
+.calendario-seta {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    color: #4b5563;
+    font-size: 1.35rem;
+}
+
+.calendario-seta:hover {
+    background: #e5e7eb;
+    text-decoration: none;
+}
+
+.calendario-grade {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    border-top: 1px solid #e5e7eb;
+    border-left: 1px solid #e5e7eb;
+}
+
+.calendario-semana-dia {
+    padding: 0.65rem 0.25rem;
+    border-right: 1px solid #e5e7eb;
+    border-bottom: 1px solid #e5e7eb;
+    color: #374151;
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-align: center;
+}
+
+.calendario-celula {
+    min-width: 0;
+    min-height: 108px;
+    padding: 0.4rem;
+    border-right: 1px solid #e5e7eb;
+    border-bottom: 1px solid #e5e7eb;
+    background: #fff;
+}
+
+.calendario-celula.fora-do-mes {
+    background: #f8f9fb;
+}
+
+.calendario-celula.fora-do-mes .calendario-numero {
+    color: #9ca3af;
+}
+
+.calendario-numero {
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    margin: 0 auto 0.25rem;
+    border-radius: 50%;
+    color: #111827;
+    font-size: 0.9rem;
+}
+
+.calendario-celula.hoje .calendario-numero {
+    background: #4285f4;
+    color: #fff;
+    font-weight: 700;
+}
+
+.calendario-eventos {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: var(--cor-branco);
-    padding: 0.7rem 1rem;
-    border-radius: 8px;
-    margin-bottom: 0.5rem;
-    box-shadow: var(--sombra);
-    flex-wrap: wrap;
-    gap: 0.4rem;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.evento-calendario {
+    display: block;
+    overflow: hidden;
+    padding: 0.2rem 0.3rem;
+    border-left: 3px solid var(--cor-primaria-clara);
+    border-radius: 3px;
+    background: #eef0ff;
+    color: var(--cor-primaria);
+    font-size: 0.75rem;
+    line-height: 1.25;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.evento-calendario:hover {
+    background: #dfe3ff;
+    text-decoration: none;
+}
+
+.evento-horario {
+    margin-right: 0.2rem;
+    font-weight: 700;
+}
+
+.calendario-vazio {
+    margin: 0;
+    padding: 0.8rem 1rem;
+    color: #6b7280;
 }
 
 /* -------------------------------- Filtros -------------------------------- */
@@ -341,6 +444,48 @@ tr:hover td { background: #f7f9f8; }
 /* -------------------------------- Responsivo -------------------------------- */
 
 @media (max-width: 720px) {
+    .calendario-cabecalho {
+        grid-template-columns: 38px 1fr 38px;
+        padding: 0.3rem 0.35rem;
+    }
+
+    .calendario-cabecalho h2 {
+        font-size: 0.95rem;
+    }
+
+    .calendario-semana-dia {
+        padding: 0.45rem 0.05rem;
+        font-size: 0.68rem;
+    }
+
+    .calendario-celula {
+        min-height: 76px;
+        padding: 0.15rem;
+    }
+
+    .calendario-numero {
+        width: 26px;
+        height: 26px;
+        margin-bottom: 0.15rem;
+        font-size: 0.8rem;
+    }
+
+    .calendario-eventos {
+        max-height: 2.4rem;
+        overflow: hidden;
+        gap: 0.1rem;
+    }
+
+    .evento-calendario {
+        padding: 0.12rem 0.15rem;
+        border-left-width: 2px;
+        font-size: 0.6rem;
+    }
+
+    .evento-horario {
+        display: none;
+    }
+
     .marca {
         margin-left: 0;
     }
