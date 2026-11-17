@@ -42,7 +42,7 @@ As regras são conferidas no servidor e os formulários mostram somente os perfi
 3. Crie a conta inicial da Direção com `npm run criar-direcao` (ou `npm run criar-direcao -- --nome "Nome" --email email@escola --matricula 123`). Guarde a senha provisória exibida no terminal e entregue-a de forma segura à Direção.
 4. A Direção deve trocar a senha no primeiro login.
 
-Para um banco existente, execute `database/migrations/002_primeiro_acesso_seguro.sql` antes de atualizar a aplicação. Pode ser executada novamente sem duplicar colunas ou tabelas. Ela migra contas ALUNO sem senha para senha da matrícula com troca obrigatória; contas de gestão continuam sem senha e precisam de novo código pela tela de gestão.
+Para um banco existente, execute em ordem os arquivos de database/migrations/ antes de atualizar a aplicacao. As migracoes podem ser executadas novamente sem duplicar colunas ou tabelas. A migracao 002_primeiro_acesso_seguro.sql configura o primeiro acesso; a 003_fase1_cursos_eventos_calendario.sql atualiza cursos, turmas, calendario e eventos, incluindo eventos.prazo_pagamento, necessaria ao codigo atual. A migracao 002 converte contas ALUNO sem senha para senha da matricula com troca obrigatoria; contas de gestao continuam sem senha e precisam de novo codigo pela tela de gestao.
 
 `database/seed_dev.sql` contém contas fictícias com senha `123456`. **SOMENTE DESENVOLVIMENTO. NUNCA RODAR EM PRODUÇÃO.**
 
