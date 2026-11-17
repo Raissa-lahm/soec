@@ -16,6 +16,17 @@
             <label for="descricao">Descrição</label>
             <textarea id="descricao" name="descricao" rows="6"><%= comunicado ? (comunicado.descricao || '') : '' %></textarea>
         </div>
+        <div class="linha-form">
+            <div class="campo">
+                <label for="data_evento">Data da atividade ou assunto</label>
+                <input type="date" id="data_evento" name="data_evento" value="<%= comunicado ? (comunicado.data_evento || '') : '' %>">
+            </div>
+            <div class="campo">
+                <label for="prazo_final">Prazo final</label>
+                <input type="date" id="prazo_final" name="prazo_final" value="<%= comunicado ? (comunicado.prazo_final || '') : '' %>">
+            </div>
+        </div>
+        <p><small>As datas informadas aparecerão no calendário institucional.</small></p>
         <div class="acoes">
             <button type="submit" class="botao botao-primario">Salvar</button>
             <a href="/comunicados" class="botao botao-secundario">Cancelar</a>

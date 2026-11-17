@@ -5,6 +5,19 @@
 
 const ComunicadoModel = require('../models/comunicadoModel');
 
+function dataValida(valor) {
+    if (!valor) return true;
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(valor)) return false;
+    const data = new Date(`${valor}T00:00:00Z`);
+    return !Number.isNaN(data.getTime()) && data.toISOString().slice(0, 10) === valor;
+}
+
+function erroDatas({ data_evento, prazo_final }) {
+    if (!dataValida(data_evento) || !dataValida(prazo_final)) return 'Informe datas válidas.';
+    if (data_evento && prazo_final && prazo_final < data_evento) return 'O prazo final não pode ser anterior à data da atividade.';
+    return null;
+}
+
 const ComunicadoController = {
 
     async listar(req, res, next) {
@@ -32,15 +45,16 @@ const ComunicadoController = {
 
     async criar(req, res, next) {
         try {
-            const { titulo, descricao } = req.body;
-            if (!titulo) {
+            const { titulo, descricao, data_evento, prazo_final } = req.body;
+            const problemaDatas = erroDatas({ data_evento, prazo_final });
+            if (!titulo || problemaDatas) {
                 return res.status(400).render('comunicados/form', {
                     comunicado: req.body,
                     acao: '/comunicados',
-                    erro: 'O titulo do comunicado e obrigatorio.'
+                    erro: problemaDatas || 'O título do comunicado é obrigatório.'
                 });
             }
-            await ComunicadoModel.criar({ titulo, descricao, criado_por: req.session.usuario.id });
+            await ComunicadoModel.criar({ titulo, descricao, data_evento, prazo_final, criado_por: req.session.usuario.id });
             res.redirect('/comunicados');
         } catch (erro) {
             next(erro);
@@ -49,8 +63,17 @@ const ComunicadoController = {
 
     async atualizar(req, res, next) {
         try {
-            const { titulo, descricao } = req.body;
-            await ComunicadoModel.atualizar(req.params.id, { titulo, descricao });
+            const { titulo, descricao, data_evento, prazo_final } = req.body;
+            const problemaDatas = erroDatas({ data_evento, prazo_final });
+            if (!titulo || problemaDatas) {
+                const comunicado = { ...req.body, id: req.params.id };
+                return res.status(400).render('comunicados/form', {
+                    comunicado,
+                    acao: `/comunicados/${req.params.id}?_method=PUT`,
+                    erro: problemaDatas || 'O título do comunicado é obrigatório.'
+                });
+            }
+            await ComunicadoModel.atualizar(req.params.id, { titulo, descricao, data_evento, prazo_final });
             res.redirect('/comunicados');
         } catch (erro) {
             next(erro);

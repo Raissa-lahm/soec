@@ -68,9 +68,10 @@ const HomeController = {
             const primeiroDia = new Date(ano, mes - 1, 1);
             const ultimoDia = new Date(ano, mes, 0);
             const iso=(d)=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-            const [eventos,datas,trimestre,anoVigente]=await Promise.all([
+            const [eventos,datas,comunicados,trimestre,anoVigente]=await Promise.all([
                 EventoModel.listarParaCalendario(),
                 CalendarioModel.listar({inicio:iso(primeiroDia),fim:iso(ultimoDia),cursoId,serie,todas:todos}),
+                ComunicadoModel.listarParaCalendario({inicio:iso(primeiroDia),fim:iso(ultimoDia)}),
                 CalendarioModel.trimestreAtual(),AnoLetivoModel.vigente()
             ]);
             const eventosPorDia = new Map();
@@ -95,6 +96,22 @@ const HomeController = {
                     cursor.setDate(cursor.getDate()+1);
                 }
             }
+            const comunicadosPorDia = new Map();
+            const adicionarComunicado = (comunicado, data, prazo) => {
+                if (!data) return;
+                const p = dateParts(data);
+                if (p.ano !== ano || p.mes !== mes) return;
+                const chave = keyDate(p.ano, p.mes, p.dia);
+                if (!comunicadosPorDia.has(chave)) comunicadosPorDia.set(chave, []);
+                comunicadosPorDia.get(chave).push({
+                    id: comunicado.id,
+                    titulo: `${prazo ? 'Prazo final: ' : ''}${comunicado.titulo}`
+                });
+            };
+            comunicados.forEach(c => {
+                adicionarComunicado(c, c.data_evento, false);
+                adicionarComunicado(c, c.prazo_final, true);
+            });
             const offset = primeiroDia.getDay();
             const diasNoMes = new Date(ano, mes, 0).getDate();
             const totalCelulas = Math.ceil((offset + diasNoMes) / 7) * 7;
@@ -112,7 +129,8 @@ const HomeController = {
                         ehHoje: data.getFullYear() === anoHoje &&
                             data.getMonth() + 1 === mesHoje && data.getDate() === diaHoje,
                         eventos: estaNoMes ? (eventosPorDia.get(chave) || []) : [],
-                        datas: estaNoMes ? (datasPorDia.get(chave) || []) : []
+                        datas: estaNoMes ? (datasPorDia.get(chave) || []) : [],
+                        comunicados: estaNoMes ? (comunicadosPorDia.get(chave) || []) : []
                     });
                 }
                 semanas.push(semana);
@@ -122,7 +140,11 @@ const HomeController = {
             const proximo = new Date(ano, mes, 1);
             const agendaItens=[
                 ...datas.map(d=>({tipo:'DATA',titulo:d.titulo,data:d.data_inicio,subtitulo:d.tipo.replaceAll('_',' '),semAula:d.sem_aula})),
-                ...eventos.filter(e=>e.ano===ano&&e.mes===mes).map(e=>({tipo:'EVENTO',titulo:e.titulo,data:`${e.ano}-${String(e.mes).padStart(2,'0')}-${String(e.dia).padStart(2,'0')}`,subtitulo:e.horario,url:`/eventos/${e.id}`}))
+                ...eventos.filter(e=>e.ano===ano&&e.mes===mes).map(e=>({tipo:'EVENTO',titulo:e.titulo,data:`${e.ano}-${String(e.mes).padStart(2,'0')}-${String(e.dia).padStart(2,'0')}`,subtitulo:e.horario,url:`/eventos/${e.id}`})),
+                ...comunicados.flatMap(c=>[
+                    c.data_evento ? {tipo:'COMUNICADO',titulo:c.titulo,data:c.data_evento,subtitulo:'Comunicado',url:'/comunicados'} : null,
+                    c.prazo_final ? {tipo:'PRAZO',titulo:c.titulo,data:c.prazo_final,subtitulo:'Prazo final',url:'/comunicados'} : null
+                ].filter(Boolean))
             ].sort((a,b)=>a.data.localeCompare(b.data));
 
             res.render('calendario', {
@@ -130,7 +152,7 @@ const HomeController = {
                 mesNome: primeiroDia.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }),
                 mesAnterior: { mes: anterior.getMonth() + 1, ano: anterior.getFullYear() },
                 mesProximo: { mes: proximo.getMonth() + 1, ano: proximo.getFullYear() },
-                temEventos: eventosPorDia.size > 0 || datasPorDia.size > 0,
+                temEventos: eventosPorDia.size > 0 || datasPorDia.size > 0 || comunicadosPorDia.size > 0,
                 datasAgenda: datas,
                 agendaItens,
                 trimestre,

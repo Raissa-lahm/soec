@@ -75,8 +75,11 @@ CREATE TABLE IF NOT EXISTS comunicados (
     id              SERIAL PRIMARY KEY,
     titulo          VARCHAR(150) NOT NULL,
     descricao       TEXT,
+    data_evento     DATE,
+    prazo_final     DATE,
     data_publicacao TIMESTAMP    NOT NULL DEFAULT NOW(),
-    criado_por      INTEGER      NOT NULL REFERENCES usuarios(id) ON DELETE RESTRICT
+    criado_por      INTEGER      NOT NULL REFERENCES usuarios(id) ON DELETE RESTRICT,
+    CONSTRAINT ck_comunicados_prazo_final CHECK (data_evento IS NULL OR prazo_final IS NULL OR prazo_final >= data_evento)
 );
 
 -- -------------------------------------------------------------------------
