@@ -3,8 +3,8 @@
 <div class="titulo-pagina"><h1><%= titulo %></h1></div>
 <div class="form-cartao">
     <% if (typeof erro !== 'undefined' && erro) { %><div class="alerta alerta-erro"><%= erro %></div><% } %>
-    <% if (typeof avisos !== 'undefined' && avisos && avisos.length) { %><div class="alerta alerta-aviso"><strong>Conflitos encontrados:</strong><ul><% avisos.forEach(a=>{ %><li><%= a.titulo %> (<%= a.tipo %>)</li><% }) %></ul><label><input type="checkbox" name="confirmar_conflito" value="1"> Confirmo que quero salvar mesmo assim</label></div><% } %>
     <form action="<%= acao %>" method="POST">
+    <% if (typeof avisos !== 'undefined' && avisos && avisos.length) { %><div class="alerta alerta-aviso"><strong>Conflitos encontrados:</strong><ul><% avisos.forEach(a=>{ %><li><%= a.titulo %> (<%= a.tipo %>)</li><% }) %></ul><label><input type="checkbox" name="confirmar_conflito" value="1"> Confirmo que quero salvar mesmo assim</label></div><% } %>
         <h2>Dados gerais</h2>
         <div class="campo"><label for="titulo">Título *</label><input id="titulo" name="titulo" maxlength="150" value="<%= v('titulo') %>" required></div>
         <div class="campo"><label for="descricao">Descrição</label><textarea id="descricao" name="descricao" rows="4"><%= v('descricao') %></textarea></div>
