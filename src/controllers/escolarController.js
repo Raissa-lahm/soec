@@ -15,7 +15,7 @@ const EscolarController = {
             const [anos,cursos,turmas,trimestres,datas,semTurma]=await Promise.all([
                 AnoLetivoModel.listar(),CursoModel.listar(),TurmaModel.listar(vigente.ano),CalendarioModel.trimestres(vigente.ano),CalendarioModel.todos(),TurmaModel.alunosSemTurma(vigente.ano)
             ]);
-            res.render('admin/gestaoEscolar',{vigente,anos,cursos,turmas,trimestres,datas,semTurma,tiposData:TIPOS_DATA,erro:null});
+            res.render('admin/gestaoEscolar',{vigente,anos,anoLetivoCadastrado:anos.some(a=>Number(a.ano)===Number(vigente.ano)),cursos,turmas,trimestres,datas,semTurma,tiposData:TIPOS_DATA,erro:null});
         } catch(e) { next(e); }
     },
     async salvarAno(req,res,next) {
@@ -35,6 +35,8 @@ const EscolarController = {
         try {
             const ano=Number(req.body.ano),numero=Number(req.body.numero),{inicio,fim}=req.body;
             if(!Number.isInteger(ano)||![1,2,3].includes(numero)||!dataISOValida(inicio)||!dataISOValida(fim)||fim<inicio) return res.status(400).send('Período de trimestre inválido.');
+            const anos=await AnoLetivoModel.listar();
+            if(!anos.some(a=>Number(a.ano)===ano)) return res.status(400).send('Cadastre o ano letivo antes de salvar os trimestres.');
             await CalendarioModel.salvarTrimestre({ano,numero,inicio,fim});
             await AuditoriaModel.registrar({usuarioId:req.session.usuario.id,acao:'EDITAR_CALENDARIO',detalhe:`Trimestre ${ano}/${numero}`,ip:req.ip});
             return res.redirect('/admin/gestao-escolar');

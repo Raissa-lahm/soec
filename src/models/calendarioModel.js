@@ -12,7 +12,7 @@ module.exports = {
     },
     async todos() {
         const r = await pool.query(`SELECT d.*,d.data_inicio::text,d.data_fim::text,c.nome AS curso_nome
-            FROM calendario_datas d LEFT JOIN cursos c ON c.id=d.curso_id ORDER BY data_inicio DESC`);
+            FROM calendario_datas d LEFT JOIN cursos c ON c.id=d.curso_id ORDER BY d.data_inicio DESC`);
         return r.rows;
     },
     async trimestres(ano) {
