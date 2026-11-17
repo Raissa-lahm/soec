@@ -38,16 +38,40 @@
             <div class="campo"><p>Aluno recebe matrícula como senha provisória e deverá trocá-la. Perfis de equipe recebem um código de ativação.</p></div>
         </div>
 
-        <div class="linha-form">
-            <div class="campo">
-                <label for="curso">Curso</label>
-                <input type="text" id="curso" name="curso" value="<%= usuario ? (usuario.curso || '') : '' %>">
-            </div>
-            <div class="campo">
-                <label for="turma">Turma</label>
-                <input type="text" id="turma" name="turma" value="<%= usuario ? (usuario.turma || '') : '' %>">
-            </div>
+        <div class="campo" id="campo-turma">
+            <label for="turma_id">Turma do ano letivo <%= anoLetivo %> *</label>
+            <select id="turma_id" name="turma_id">
+                <option value="">Selecione a turma...</option>
+                <% cursos.forEach(curso => { [1,2,3].forEach(serie => { const opcoes = turmas.filter(t => t.curso_id === curso.id && t.serie === serie); if (opcoes.length) { %>
+                    <optgroup label="<%= curso.nome %> — <%= serie %>ª série">
+                        <% opcoes.forEach(t => { %><option value="<%= t.id %>" <%= Number((usuario && usuario.turma_id) || 0) === t.id ? 'selected' : '' %>><%= t.codigo %></option><% }) %>
+                    </optgroup>
+                <% } }) }) %>
+            </select>
+            <% if (!turmas.length) { %><small>Cadastre turmas antes de criar alunos.</small><% } %>
         </div>
+        <div class="campo" id="campo-curso">
+            <label for="curso_id">Curso (opcional para equipe)</label>
+            <select id="curso_id" name="curso_id"><option value="">Sem curso</option>
+                <% cursos.forEach(c => { %><option value="<%= c.id %>" <%= usuario && usuario.curso === c.nome ? 'selected' : '' %>><%= c.nome %></option><% }) %>
+            </select>
+        </div>
+        <script>
+            (() => {
+                const perfil = document.getElementById('perfil');
+                const campoTurma = document.getElementById('campo-turma');
+                const campoCurso = document.getElementById('campo-curso');
+                const turma = document.getElementById('turma_id');
+                const atualizar = () => {
+                    const aluno = perfil.value === 'ALUNO';
+                    campoTurma.hidden = !aluno;
+                    campoCurso.hidden = aluno;
+                    turma.required = aluno;
+                };
+                perfil.addEventListener('change', atualizar);
+                atualizar();
+            })();
+        </script>
 
         <div class="acoes">
             <button type="submit" class="botao botao-primario">Salvar</button>

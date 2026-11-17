@@ -1,0 +1,21 @@
+<% var titulo = `Inscrição: ${evento.titulo}` %>
+<%- include('../partials/header') %>
+<div class="titulo-pagina"><h1><%= titulo %></h1></div>
+<div class="form-cartao">
+    <% if (erro) { %><div class="alerta alerta-erro"><%= erro %></div><% } %>
+    <% if (elegibilidade && !elegibilidade.ok) { %><div class="alerta alerta-aviso"><%= elegibilidade.mensagemPublica %></div><% } else if (typeof cpfConfigurado !== 'undefined' && !cpfConfigurado) { %><% } else { %>
+    <p>Inscrição: <strong><%= Number(evento.valor_inscricao)===0?'Gratuita':new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(evento.valor_inscricao) %></strong></p>
+    <% if (evento.transporte_ofertado) { %><p>Transporte: <%= Number(evento.valor_transporte)===0?'gratuito':new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(evento.valor_transporte) %></p><% } %>
+    <% if (evento.vagas_limite>0 && evento.total_inscritos>=evento.vagas_limite) { %><div class="alerta alerta-aviso">As vagas estão esgotadas; sua solicitação ficará na lista de espera.</div><% } %>
+    <form action="/eventos/<%= evento.id %>/inscrever" method="POST">
+        <% if (evento.transporte_ofertado && !evento.transporte_obrigatorio && (typeof transporte==='undefined'||transporte.disponivel)) { %><label><input type="checkbox" id="usa_transporte" name="usa_transporte"> Quero usar o transporte (<%= new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(evento.valor_transporte) %>)</label><% } else if(evento.transporte_ofertado&&typeof transporte!=='undefined'&&!transporte.disponivel){ %><p class="alerta alerta-aviso">As vagas de transporte estão esgotadas; não é possível escolher o transporte.</p><% } %>
+        <% if (evento.transporte_obrigatorio) { %><input type="hidden" name="usa_transporte" value="on"><p>O transporte é obrigatório. O valor será incluído no total.</p><% } %>
+        <% if (evento.exige_cpf) { %><div class="campo"><label>CPF <%= cpfSalvo?'(já cadastrado; será reutilizado)':'*' %></label><% if (!cpfSalvo) { %><input name="cpf" inputmode="numeric" autocomplete="off" required><% } %><label><input type="checkbox" name="aceite_dados" required> Autorizo o uso destes dados para organizar o evento.</label></div><% } %>
+        <% if (evento.exige_contato_emergencia) { %><div class="linha-form"><div class="campo"><label>Contato de emergência *</label><input name="contato_emergencia_nome" required></div><div class="campo"><label>Telefone *</label><input name="contato_emergencia_telefone" required></div></div><% } %>
+        <p>Valor total calculado: <strong id="valor-total" data-inscricao="<%= evento.valor_inscricao %>" data-transporte="<%= evento.valor_transporte %>" data-obrigatorio="<%= evento.transporte_obrigatorio %>"><%= new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(Number(evento.valor_inscricao)+(evento.transporte_obrigatorio?Number(evento.valor_transporte):0)) %></strong></p>
+        <button class="botao botao-primario">Confirmar inscrição</button>
+    </form><% } %>
+    <a href="/eventos/<%= evento.id %>" class="botao botao-secundario">Voltar ao evento</a>
+</div>
+<script>(()=>{const total=document.getElementById('valor-total'),check=document.getElementById('usa_transporte');if(!total)return;const atualizar=()=>{const valor=Number(total.dataset.inscricao)+(check?.checked||total.dataset.obrigatorio==='true'?Number(total.dataset.transporte):0);total.textContent=new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(valor)};check?.addEventListener('change',atualizar);atualizar();})();</script>
+<%- include('../partials/footer') %>

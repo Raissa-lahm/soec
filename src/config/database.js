@@ -11,6 +11,8 @@
 
 require('dotenv').config();
 const { Pool } = require('pg');
+const { types } = require('pg');
+types.setTypeParser(1082, (valor) => valor); // DATE permanece YYYY-MM-DD; não sofre conversão de fuso.
 
 // Cria o pool usando os dados definidos no .env
 const pool = new Pool({

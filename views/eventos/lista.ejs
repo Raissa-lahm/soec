@@ -43,12 +43,16 @@
         <% eventos.forEach(evento => { %>
             <div class="cartao">
                 <span class="tag"><%= evento.tipo %></span>
+                <% if(evento.curso_nomes.length||evento.series_permitidas){ %><span class="tag">Exclusivo: <%= evento.curso_nomes.join(', ')||'todos os cursos' %><%= evento.series_permitidas?' / '+evento.series_permitidas.join(', ')+'ª série':'' %></span><% } %>
+                <% if(Number(evento.valor_inscricao)>0){ %><span class="tag">Pago <%= new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(Number(evento.valor_inscricao)) %></span><% } %>
+                <% if(evento.externo){ %><span class="tag">Externo</span><% } %><% if(evento.transporte_ofertado){ %><span class="tag">Transporte <%= new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(Number(evento.valor_transporte)) %></span><% } %>
                 <h3><%= evento.titulo %></h3>
                 <p><%= (evento.descricao || '').substring(0, 110) %><%= (evento.descricao || '').length > 110 ? '...' : '' %></p>
                 <p><small>
                     <%= new Date(evento.data_evento).toLocaleString('pt-BR') %><br>
                     <%= evento.local || 'Local a definir' %><br>
                     Inscritos: <%= evento.total_inscritos %><%= evento.vagas_limite > 0 ? ' / ' + evento.vagas_limite : '' %>
+                    <% if(evento.inscricao_fim){ %><br>Encerra em <%= new Date(evento.inscricao_fim).toLocaleString('pt-BR') %><% } %>
                 </small></p>
                 <a href="/eventos/<%= evento.id %>" class="botao botao-primario">Ver detalhes</a>
             </div>

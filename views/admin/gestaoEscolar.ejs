@@ -1,0 +1,58 @@
+<% var titulo = 'Cursos, turmas e calendário letivo' %>
+<%- include('../partials/header') %>
+<div class="titulo-pagina"><h1><%= titulo %></h1></div>
+<section class="form-cartao">
+    <h2>Ano letivo</h2>
+    <form action="/admin/anos-letivos" method="POST" class="linha-form">
+        <div class="campo"><label>Ano</label><input name="ano" type="number" min="2000" max="2100" value="<%= vigente.ano %>" required></div>
+        <div class="campo"><label>Início</label><input name="inicio" type="date" required></div>
+        <div class="campo"><label>Fim</label><input name="fim" type="date" required></div>
+        <button class="botao botao-primario">Salvar ano</button>
+    </form>
+    <form action="/admin/trimestres" method="POST" class="linha-form">
+        <input type="hidden" name="ano" value="<%= vigente.ano %>">
+        <div class="campo"><label>Trimestre</label><select name="numero"><option>1</option><option>2</option><option>3</option></select></div>
+        <div class="campo"><label>Início</label><input name="inicio" type="date" required></div>
+        <div class="campo"><label>Fim</label><input name="fim" type="date" required></div>
+        <button class="botao botao-primario">Salvar trimestre</button>
+    </form>
+    <% anos.forEach(a => { %><div class="linha-form"><form action="/admin/anos-letivos" method="POST"><input type="hidden" name="ano" value="<%= a.ano %>"><span>Ano <%= a.ano %></span><input name="inicio" type="date" value="<%= a.inicio %>" required><input name="fim" type="date" value="<%= a.fim %>" required><button class="botao botao-secundario">Editar</button></form><form action="/admin/anos-letivos/<%= a.ano %>?_method=DELETE" method="POST"><button class="botao botao-perigo">Excluir</button></form></div><% }) %>
+    <% trimestres.forEach(t => { %><div class="linha-form"><form action="/admin/trimestres" method="POST"><input type="hidden" name="ano" value="<%= t.ano %>"><input type="hidden" name="numero" value="<%= t.numero %>"><span><%= t.numero %>º trimestre</span><input name="inicio" type="date" value="<%= t.inicio %>" required><input name="fim" type="date" value="<%= t.fim %>" required><button class="botao botao-secundario">Editar</button></form><form action="/admin/trimestres/<%= t.id %>?_method=DELETE" method="POST"><button class="botao botao-perigo">Excluir</button></form></div><% }) %>
+</section>
+<section class="form-cartao">
+    <h2>Turmas de <%= vigente.ano %></h2>
+    <p>O código é gerado a partir do curso, série e subturma.</p>
+    <form action="/admin/turmas" method="POST" class="linha-form">
+        <input type="hidden" name="ano_letivo" value="<%= vigente.ano %>">
+        <div class="campo"><label>Curso</label><select name="curso_id" required><% cursos.forEach(c => { %><option value="<%= c.id %>"><%= c.numero %> — <%= c.nome %></option><% }) %></select></div>
+        <div class="campo"><label>Série</label><select name="serie"><option>1</option><option>2</option><option>3</option></select></div>
+        <div class="campo"><label>Subturma (opcional)</label><select name="subturma"><option value="">Turma única</option><% for(let n=1;n<=9;n++){ %><option value="<%= n %>"><%= n %></option><% } %></select></div>
+        <button class="botao botao-primario">Criar turma</button>
+    </form>
+    <div class="tabela-responsiva"><table><thead><tr><th>Código</th><th>Curso</th><th>Ano</th><th>Alterar</th><th>Ações</th></tr></thead><tbody>
+    <% turmas.forEach(t => { %><tr><td><%= t.codigo %></td><td><%= t.curso_nome %></td><td><%= t.ano_letivo %></td><td>
+        <form action="/admin/turmas/<%= t.id %>?_method=PUT" method="POST"><input type="hidden" name="ano_letivo" value="<%= t.ano_letivo %>"><select name="curso_id"><% cursos.forEach(c=>{ %><option value="<%= c.id %>" <%= c.id===t.curso_id?'selected':'' %>><%= c.nome %></option><% }) %></select><select name="serie"><% [1,2,3].forEach(s=>{ %><option value="<%= s %>" <%= s===t.serie?'selected':'' %>><%= s %></option><% }) %></select><select name="subturma"><option value="" <%= t.subturma===null?'selected':'' %>>Única</option><% for(let n=1;n<=9;n++){ %><option value="<%= n %>" <%= n===t.subturma?'selected':'' %>><%= n %></option><% } %></select><button class="botao botao-secundario">Atualizar</button></form>
+    </td><td><form action="/admin/turmas/<%= t.id %>/desativar" method="POST"><button class="botao botao-perigo" <%= !t.ativo?'disabled':'' %>>Desativar</button></form>
+    </td></tr><% }) %></tbody></table></div>
+    <a href="/admin/alunos-sem-turma" class="botao botao-secundario">Alunos sem turma (<%= semTurma.length %>)</a>
+</section>
+<section class="form-cartao">
+    <h2>Datas letivas</h2>
+    <form action="/admin/calendario-datas" method="POST">
+        <div class="linha-form"><div class="campo"><label>Título</label><input name="titulo" maxlength="150" required></div>
+        <div class="campo"><label>Tipo</label><select name="tipo"><% tiposData.forEach(t => { %><option value="<%= t %>"><%= t.replaceAll('_',' ') %></option><% }) %></select></div></div>
+        <div class="linha-form"><div class="campo"><label>Início</label><input name="data_inicio" type="date" required></div><div class="campo"><label>Fim (opcional)</label><input name="data_fim" type="date"></div></div>
+        <div class="linha-form"><div class="campo"><label>Curso (vazio = todos)</label><select name="curso_id"><option value="">Todos</option><% cursos.forEach(c => { %><option value="<%= c.id %>"><%= c.nome %></option><% }) %></select></div>
+        <div class="campo"><label>Série (vazio = todas)</label><select name="serie"><option value="">Todas</option><option>1</option><option>2</option><option>3</option></select></div></div>
+        <div class="campo"><label><input type="checkbox" name="sem_aula"> Não haverá aula</label></div>
+        <div class="campo"><label>Descrição</label><textarea name="descricao"></textarea></div>
+        <button class="botao botao-primario">Adicionar data</button>
+    </form>
+    <form action="/admin/calendario-datas/copiar" method="POST" class="linha-form">
+        <div class="campo"><label>Copiar datas do ano</label><input name="ano_origem" type="number" required></div>
+        <div class="campo"><label>Para o ano</label><input name="ano_destino" type="number" value="<%= vigente.ano %>" required></div>
+        <button class="botao botao-secundario">Copiar datas</button>
+    </form>
+    <% datas.slice(0,30).forEach(d => { %><details><summary><%= d.data_inicio %> — <%= d.titulo %> (<%= d.tipo %>)</summary><form action="/admin/calendario-datas/<%= d.id %>?_method=PUT" method="POST"><div class="linha-form"><input name="titulo" value="<%= d.titulo %>" required><select name="tipo"><% tiposData.forEach(t=>{ %><option value="<%= t %>" <%= t===d.tipo?'selected':'' %>><%= t %></option><% }) %></select><input name="data_inicio" type="date" value="<%= d.data_inicio %>" required><input name="data_fim" type="date" value="<%= d.data_fim||'' %>"></div><div class="linha-form"><select name="curso_id"><option value="">Todos os cursos</option><% cursos.forEach(c=>{ %><option value="<%= c.id %>" <%= d.curso_id===c.id?'selected':'' %>><%= c.nome %></option><% }) %></select><select name="serie"><option value="">Todas as séries</option><% [1,2,3].forEach(s=>{ %><option value="<%= s %>" <%= d.serie===s?'selected':'' %>><%= s %></option><% }) %></select><label><input type="checkbox" name="sem_aula" <%= d.sem_aula?'checked':'' %>> Sem aula</label></div><textarea name="descricao"><%= d.descricao||'' %></textarea><button class="botao botao-primario">Atualizar</button></form><form action="/admin/calendario-datas/<%= d.id %>?_method=DELETE" method="POST"><button class="botao botao-perigo">Excluir</button></form></details><% }) %>
+</section>
+<%- include('../partials/footer') %>

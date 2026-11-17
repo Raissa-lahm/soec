@@ -1,43 +1,7 @@
-<% var titulo = 'Minhas inscrições' %>
+<% var titulo = 'Minhas inscrições'; const dinheiro=n=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(Number(n||0)); %>
 <%- include('../partials/header') %>
-
-<div class="titulo-pagina">
-    <h1>Minhas inscrições</h1>
-</div>
-
-<% if (inscricoes.length === 0) { %>
-    <div class="cartao"><p>Você ainda não está inscrito(a) em nenhum evento.</p></div>
-<% } else { %>
-    <div class="tabela-wrapper">
-        <table>
-            <thead>
-                <tr>
-                    <th>Evento</th>
-                    <th>Categoria</th>
-                    <th>Data do evento</th>
-                    <th>Local</th>
-                    <th>Inscrito em</th>
-                    <th>Ações</th>
-                </tr>
-            </thead>
-            <tbody>
-                <% inscricoes.forEach(i => { %>
-                    <tr>
-                        <td><a href="/eventos/<%= i.evento_id %>"><%= i.titulo %></a></td>
-                        <td><span class="tag"><%= i.tipo %></span></td>
-                        <td><%= new Date(i.data_evento).toLocaleString('pt-BR') %></td>
-                        <td><%= i.local || '-' %></td>
-                        <td><%= new Date(i.data_inscricao).toLocaleDateString('pt-BR') %></td>
-                        <td>
-                            <form action="/eventos/<%= i.evento_id %>/cancelar-inscricao" method="POST">
-                                <button type="submit" class="botao botao-perigo">Cancelar</button>
-                            </form>
-                        </td>
-                    </tr>
-                <% }) %>
-            </tbody>
-        </table>
-    </div>
-<% } %>
-
+<div class="titulo-pagina"><h1><%= titulo %></h1></div>
+<% if(!inscricoes.length){ %><p>Você ainda não possui inscrições.</p><% }else{ %><div class="tabela-responsiva"><table><thead><tr><th>Evento</th><th>Data</th><th>Status</th><th>Valor</th><th>O que falta</th><th></th></tr></thead><tbody>
+<% inscricoes.forEach(i=>{ let falta=''; if(i.status==='PENDENTE'&&i.pagamento_status==='PENDENTE')falta=`Aguardando pagamento${i.prazo_pagamento?` até ${new Date(i.prazo_pagamento).toLocaleString('pt-BR')}`:''}`; if(i.status==='LISTA_ESPERA')falta='Aguardando vaga na lista de espera'; if(i.exige_autorizacao_responsavel&&!i.autorizacao_recebida)falta+=(falta?' · ':'')+'Aguardando autorização do responsável'; %><tr><td><a href="/eventos/<%= i.evento_id %>"><%= i.titulo %></a></td><td><%= new Date(i.data_evento).toLocaleString('pt-BR') %></td><td><%= i.status %><% if(i.pagamento_status){ %> / <%= i.pagamento_status %><% } %></td><td><%= dinheiro(i.valor_total) %></td><td><%= falta||'Nenhuma pendência' %></td><td><% if(!['CANCELADA','EXPIRADA'].includes(i.status)){ %><form action="/eventos/<%= i.evento_id %>/cancelar-inscricao" method="POST"><button class="botao botao-perigo">Cancelar</button></form><% } %></td></tr><% }) %>
+</tbody></table></div><% } %>
 <%- include('../partials/footer') %>

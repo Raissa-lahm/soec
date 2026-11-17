@@ -3,6 +3,9 @@ const UsuarioModel = require('../models/usuarioModel');
 const AuditoriaModel = require('../models/auditoriaModel');
 const { podeGerenciar, perfisGerenciaveis } = require('../utils/permissoes');
 const { VALIDADE_HORAS, gerarCodigo, formatarCodigo, hashCodigo } = require('../utils/ativacao');
+const TurmaModel = require('../models/turmaModel');
+const CursoModel = require('../models/cursoModel');
+const AnoLetivoModel = require('../models/anoLetivoModel');
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const SALT_ROUNDS = 10;
@@ -21,6 +24,11 @@ function montarCsvCodigos(items) {
 function renderCodigos(res, titulo, criados, ignorados = [], quantidadeCriados = criados.length) {
     return res.render('admin/codigosGerados', { titulo, criados, ignorados, csv: montarCsvCodigos(criados), quantidadeCriados });
 }
+async function opcoesForm() {
+    const ano = await AnoLetivoModel.vigente();
+    const [turmas, cursos] = await Promise.all([TurmaModel.listar(ano.ano), CursoModel.listar()]);
+    return { turmas: turmas.filter(t => t.ativo), cursos, anoLetivo: ano.ano };
+}
 
 const UsuarioController = {
     async dashboard(req,res,next) {
@@ -37,32 +45,39 @@ const UsuarioController = {
             res.render('admin/usuarios', { usuarios: perfil ? visiveis.filter(u=>u.perfil===perfil) : visiveis, filtroPerfil: perfil, perfis: perfisGerenciaveis(req.session.usuario.perfil), perfilLogado: req.session.usuario.perfil });
         } catch(e) { next(e); }
     },
-    exibirFormCriar(req,res) {
-        res.render('admin/usuarioForm', { usuario:null, acao:'/admin/usuarios', perfis:perfisGerenciaveis(req.session.usuario.perfil) });
+    async exibirFormCriar(req,res,next) {
+        try { res.render('admin/usuarioForm', { usuario:null, acao:'/admin/usuarios', perfis:perfisGerenciaveis(req.session.usuario.perfil), ...(await opcoesForm()) }); }
+        catch (e) { next(e); }
     },
     async exibirFormEditar(req,res,next) {
         try {
             const usuario = await UsuarioModel.buscarPorId(req.params.id);
             if (!usuario || !podeGerenciar(req.session.usuario.perfil, usuario.perfil)) return res.sendStatus(403);
-            res.render('admin/usuarioForm', { usuario, acao:`/admin/usuarios/${usuario.id}?_method=PUT`, perfis:perfisGerenciaveis(req.session.usuario.perfil) });
+            res.render('admin/usuarioForm', { usuario, acao:`/admin/usuarios/${usuario.id}?_method=PUT`, perfis:perfisGerenciaveis(req.session.usuario.perfil), ...(await opcoesForm()) });
         } catch(e) { next(e); }
     },
     async criar(req,res,next) {
         try {
             const nome=String(req.body.nome||'').trim(), email=String(req.body.email||'').trim().toLowerCase(), matricula=String(req.body.matricula||'').trim();
-            const perfil=String(req.body.perfil||'').toUpperCase(), curso=String(req.body.curso||'').trim(), turma=String(req.body.turma||'').trim();
+            const perfil=String(req.body.perfil||'').toUpperCase();
             const perfis=perfisGerenciaveis(req.session.usuario.perfil);
-            const renderErro = (erro) => res.status(400).render('admin/usuarioForm',{ usuario:req.body, acao:'/admin/usuarios', perfis, erro });
+            const opcoes=await opcoesForm();
+            const renderErro = (erro) => res.status(400).render('admin/usuarioForm',{ usuario:req.body, acao:'/admin/usuarios', perfis, ...opcoes, erro });
             if (!nome || !email || !matricula || !perfis.includes(perfil)) return renderErro('Dados obrigatórios inválidos ou perfil não permitido.');
             if (!EMAIL_REGEX.test(email)) return renderErro('E-mail inválido.');
             if (await UsuarioModel.buscarPorEmail(email) || await UsuarioModel.buscarPorMatricula(matricula)) return renderErro('Já existe usuário com este e-mail ou matrícula.');
             if (perfil === 'ALUNO') {
-                await UsuarioModel.criar({ nome,email,matricula,senhaHash:await bcrypt.hash(matricula,SALT_ROUNDS),perfil,curso,turma,deveTrocarSenha:true });
+                const turmaId=Number(req.body.turma_id);
+                const turmaRegistro=opcoes.turmas.find(t=>t.id===turmaId);
+                if (!turmaRegistro) return renderErro('Selecione uma turma vÃ¡lida do ano letivo vigente.');
+                await UsuarioModel.criar({ nome,email,matricula,senhaHash:await bcrypt.hash(matricula,SALT_ROUNDS),perfil,cursoId:turmaRegistro.curso_id,turmaId,curso:turmaRegistro.curso_nome,turma:turmaRegistro.codigo,deveTrocarSenha:true });
                 await AuditoriaModel.registrar({ usuarioId:req.session.usuario.id, acao:'CRIAR_USUARIO', detalhe:`Perfil ${perfil}`, ip:req.ip });
                 return res.redirect('/admin/usuarios');
             }
             const codigo=gerarCodigo();
-            await UsuarioModel.criarPendente({ nome,email,matricula,perfil,curso,turma,codigoHash:hashCodigo(codigo,matricula),validadeHoras:VALIDADE_HORAS });
+            const cursoId=Number(req.body.curso_id)||null;
+            const cursoRegistro=cursoId ? opcoes.cursos.find(c=>c.id===cursoId) : null;
+            await UsuarioModel.criarPendente({ nome,email,matricula,perfil,curso:cursoRegistro?.nome||null,cursoId:cursoRegistro?.id||null,turma:null,codigoHash:hashCodigo(codigo,matricula),validadeHoras:VALIDADE_HORAS });
             await AuditoriaModel.registrar({ usuarioId:req.session.usuario.id, acao:'CRIAR_USUARIO', detalhe:`Perfil ${perfil}`, ip:req.ip });
             return renderCodigos(res,'Código de primeiro acesso', [{nome,matricula,codigo:formatarCodigo(codigo)}]);
         } catch(e) { next(e); }
@@ -73,9 +88,19 @@ const UsuarioController = {
             if (!existente || !podeGerenciar(req.session.usuario.perfil,existente.perfil)) return res.sendStatus(403);
             const perfil=String(req.body.perfil||'').toUpperCase();
             const perfis=perfisGerenciaveis(req.session.usuario.perfil);
+            const opcoes=await opcoesForm();
             if (!perfis.includes(perfil)) return res.status(403).send('Perfil não permitido.');
             if (existente.perfil==='DIRECAO' && perfil!=='DIRECAO' && await UsuarioModel.contarDirecoesAtivas() <= 1) return res.status(400).send('Não é possível rebaixar a última Direção ativa.');
-            await UsuarioModel.atualizar(req.params.id,{nome:String(req.body.nome||'').trim(),email:String(req.body.email||'').trim().toLowerCase(),matricula:String(req.body.matricula||'').trim(),perfil,curso:req.body.curso,turma:req.body.turma});
+            let turmaRegistro=null, turmaId=null, cursoId=null, cursoNome=null, turmaNome=null;
+            if (perfil==='ALUNO') {
+                turmaId=Number(req.body.turma_id); turmaRegistro=opcoes.turmas.find(t=>t.id===turmaId);
+                if (!turmaRegistro) return res.status(400).render('admin/usuarioForm',{usuario:{...existente,...req.body},acao:`/admin/usuarios/${existente.id}?_method=PUT`,perfis,...opcoes,erro:'Selecione uma turma vÃ¡lida do ano letivo vigente.'});
+                cursoId=turmaRegistro.curso_id; cursoNome=turmaRegistro.curso_nome; turmaNome=turmaRegistro.codigo;
+            } else {
+                cursoId=Number(req.body.curso_id)||null;
+                cursoNome=opcoes.cursos.find(c=>c.id===cursoId)?.nome||null;
+            }
+            await UsuarioModel.atualizar(req.params.id,{nome:String(req.body.nome||'').trim(),email:String(req.body.email||'').trim().toLowerCase(),matricula:String(req.body.matricula||'').trim(),perfil,curso:cursoNome,turma:turmaNome,cursoId,turmaId});
             await AuditoriaModel.registrar({ usuarioId:req.session.usuario.id, alvoId:Number(req.params.id), acao:'EDITAR_USUARIO', detalhe:`Perfil ${perfil}`, ip:req.ip });
             if (existente.perfil !== perfil && perfil === 'ALUNO') {
                 await UsuarioModel.redefinirAluno(req.params.id, await bcrypt.hash(String(req.body.matricula).trim(), SALT_ROUNDS));
@@ -99,24 +124,28 @@ const UsuarioController = {
             let linhas=lerPlanilha(texto);
             if(linhas.length && semAcento(linhas[0][0]).toLowerCase()==='nome') linhas=linhas.slice(1);
             const podeCriar=perfisGerenciaveis(req.session.usuario.perfil), criados=[], ignorados=[], vistosM=new Set(), vistosE=new Set();
+            const ano=await AnoLetivoModel.vigente();
+            const cursosDisponiveis=await CursoModel.listar();
             let quantidadeCriados = 0;
             for(const [i,c] of linhas.entries()) {
                 const [nome,m0,e0,p0,curso,turma]=c; const matricula=String(m0||'').trim(),email=String(e0||'').trim().toLowerCase();
-                const perfil=semAcento(p0||'ALUNO').toUpperCase(); let motivo=null;
+                const perfil=semAcento(p0||'ALUNO').toUpperCase(); let motivo=null, turmaRegistro=null;
                 if(!nome||!matricula||!email) motivo='Faltam nome, matrícula ou e-mail.';
                 else if(!EMAIL_REGEX.test(email)) motivo='E-mail inválido.';
                 else if(!podeCriar.includes(perfil)) motivo=`Perfil ${perfil} não permitido para seu usuário.`;
                 else if(vistosM.has(matricula)||vistosE.has(email)) motivo='Matrícula ou e-mail repetido na planilha.';
                 else if(await UsuarioModel.buscarPorMatricula(matricula)||await UsuarioModel.buscarPorEmail(email)) motivo='Já existe usuário com esta matrícula ou e-mail.';
+                else if(perfil==='ALUNO' && !(turmaRegistro=await TurmaModel.buscarPorCodigo(String(turma||'').trim(),ano.ano))) motivo=`Turma ${turma||'(vazia)'} inexistente no ano letivo vigente (${ano.ano}).`;
                 if(motivo) { ignorados.push({nome:nome||`linha ${i+1}`,matricula:matricula||'-',motivo}); continue; }
                 vistosM.add(matricula); vistosE.add(email);
                 if(perfil==='ALUNO') {
-                    await UsuarioModel.criar({nome,email,matricula,senhaHash:await bcrypt.hash(matricula,SALT_ROUNDS),perfil,curso,turma,deveTrocarSenha:true});
+                    await UsuarioModel.criar({nome,email,matricula,senhaHash:await bcrypt.hash(matricula,SALT_ROUNDS),perfil,curso:turmaRegistro.curso_nome,turma:turmaRegistro.codigo,cursoId:turmaRegistro.curso_id,turmaId:turmaRegistro.id,deveTrocarSenha:true});
                     await AuditoriaModel.registrar({ usuarioId:req.session.usuario.id, acao:'CRIAR_USUARIO', detalhe:`Perfil ${perfil}`, ip:req.ip });
                     quantidadeCriados += 1;
                 } else {
                     const codigo=gerarCodigo();
-                    await UsuarioModel.criarPendente({nome,email,matricula,perfil,curso,turma,codigoHash:hashCodigo(codigo,matricula),validadeHoras:VALIDADE_HORAS});
+                    const cursoExistente=cursosDisponiveis.find(c=>semAcento(c.nome).toLowerCase()===semAcento(curso).toLowerCase());
+                    await UsuarioModel.criarPendente({nome,email,matricula,perfil,curso:cursoExistente?.nome||null,cursoId:cursoExistente?.id||null,turma:null,codigoHash:hashCodigo(codigo,matricula),validadeHoras:VALIDADE_HORAS});
                     await AuditoriaModel.registrar({ usuarioId:req.session.usuario.id, acao:'CRIAR_USUARIO', detalhe:`Perfil ${perfil}`, ip:req.ip });
                     criados.push({nome,matricula,codigo:formatarCodigo(codigo)});
                     quantidadeCriados += 1;

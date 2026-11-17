@@ -1,0 +1,9 @@
+<% var titulo = 'Alunos sem turma' %>
+<%- include('../partials/header') %>
+<div class="titulo-pagina"><h1><%= titulo %></h1><a href="/admin/gestao-escolar" class="botao botao-secundario">Voltar</a></div>
+<% if (!alunos.length) { %><p>Todos os alunos têm turma vinculada.</p><% } %>
+<div class="tabela-responsiva"><table><thead><tr><th>Aluno</th><th>Matrícula</th><th>Dados antigos</th><th>Nova turma</th></tr></thead><tbody>
+<% alunos.forEach(a => { %><tr><td><%= a.nome %></td><td><%= a.matricula %></td><td><%= a.curso || '-' %> / <%= a.turma || '-' %></td><td>
+<form action="/admin/alunos/<%= a.id %>/turma" method="POST"><select name="turma_id" required><% turmas.forEach(t => { %><option value="<%= t.id %>"><%= t.codigo %> — <%= t.curso_nome %></option><% }) %></select><button class="botao botao-primario">Vincular</button></form>
+</td></tr><% }) %></tbody></table></div>
+<%- include('../partials/footer') %>

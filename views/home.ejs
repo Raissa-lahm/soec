@@ -5,6 +5,10 @@
     <h1>Bem-vindo(a), <%= usuarioLogado.nome.split(' ')[0] %>!</h1>
 </div>
 
+<% if (trimestre) { %><div class="alerta alerta-aviso"><strong>Estamos no <%= trimestre.numero %>º trimestre</strong> (faltam <%= trimestre.dias_restantes %> dias).</div><% } %>
+
+<% if (marcos.length) { %><div class="cartao"><h3>Próximos marcos do calendário</h3><ul><% marcos.forEach(m=>{ %><li><%= m.data_inicio %> — <%= m.titulo %><%= m.curso_nome?' ('+m.curso_nome+')':'' %></li><% }) %></ul></div><% } %>
+
 <div class="grade">
     <div class="cartao">
         <h3>Próximos eventos</h3>

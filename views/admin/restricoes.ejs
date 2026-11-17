@@ -1,0 +1,22 @@
+<% var titulo = 'Restrições de inscrição' %>
+<%- include('../partials/header') %>
+<div class="titulo-pagina"><h1><%= titulo %></h1><a href="/admin/restricoes?historico=1" class="botao botao-secundario">Histórico completo</a></div>
+<% if (typeof erro !== 'undefined' && erro) { %><div class="alerta alerta-erro"><%= erro %></div><% } %><% if (typeof sucesso !== 'undefined' && sucesso) { %><div class="alerta alerta-sucesso"><%= sucesso %></div><% } %>
+<section class="form-cartao">
+    <h2>Criar restrições</h2>
+    <p>Digite somente uma referência curta, por exemplo “Ata nº 12/2026”. Não escreva o relato nem dados sensíveis.</p>
+    <form action="/admin/restricoes" method="POST">
+        <div class="campo"><label>Matrículas (uma por linha, ou separadas por vírgula)</label><textarea name="matriculas" required></textarea></div>
+        <div class="campo"><label>Escopo</label><select name="escopo" id="escopo"><option value="TODOS">Todos os eventos</option><option value="EVENTO">Evento específico</option></select></div>
+        <div class="campo" id="campo-evento" hidden><label>Evento</label><select name="evento_id"><% eventos.forEach(e => { %><option value="<%= e.id %>"><%= e.titulo %></option><% }) %></select></div>
+        <div class="linha-form"><div class="campo"><label>Referência curta</label><input name="motivo" maxlength="150" required></div><div class="campo"><label>Válida até (opcional)</label><input name="vigente_ate" type="date"></div></div>
+        <div class="campo"><label><input type="checkbox" name="cancelar"> Cancelar inscrições e remover das equipes nos eventos abrangidos</label></div>
+        <button class="botao botao-perigo">Criar restrição</button>
+    </form>
+</section>
+<section class="form-cartao"><h2><%= historico ? 'Histórico' : 'Restrições vigentes' %></h2>
+<div class="tabela-responsiva"><table><thead><tr><th>Aluno</th><th>Escopo</th><th>Referência (somente Direção)</th><th>Válida até</th><th>Situação</th><th></th></tr></thead><tbody>
+<% restricoes.forEach(r => { %><tr><td><%= r.nome %> — <%= r.matricula %></td><td><%= r.evento_titulo || 'Todos os eventos' %></td><td><%= r.motivo %></td><td><%= r.vigente_ate || 'Sem prazo' %></td><td><%= r.revogado_em ? 'Revogada' : (r.vigente ? 'Vigente' : 'Expirada') %></td><td><% if(r.vigente) { %><form action="/admin/restricoes/<%= r.id %>/revogar" method="POST"><button class="botao botao-secundario">Revogar</button></form><% } %></td></tr><% }) %>
+</tbody></table></div></section>
+<script>document.getElementById('escopo').addEventListener('change',e=>document.getElementById('campo-evento').hidden=e.target.value!=='EVENTO');</script>
+<%- include('../partials/footer') %>

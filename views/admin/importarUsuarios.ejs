@@ -12,7 +12,7 @@
 
     <p>Colunas, nesta ordem (separadas por <code>;</code> ou tabulação):<br>
     <code>nome ; matrícula ; email ; perfil ; curso ; turma</code><br>
-    Perfis disponíveis para sua conta: <%= perfis.join(', ') %> (vazio = ALUNO). Curso e turma são opcionais. Perfis não permitidos serão listados como ignorados.
+    Perfis disponíveis para sua conta: <%= perfis.join(', ') %> (vazio = ALUNO). Para ALUNO, a última coluna deve conter um código de turma do ano letivo vigente (ex.: <code>63-2</code>); a matrícula será a senha provisória. Para equipe, curso é opcional. Turmas inválidas serão listadas como ignoradas.
     A primeira linha pode ser o cabeçalho.</p>
 
     <form action="/admin/usuarios/importar" method="POST" enctype="multipart/form-data">
@@ -23,7 +23,7 @@
 
         <div class="campo">
             <label for="dados">ou cole as linhas da planilha aqui</label>
-            <textarea id="dados" name="dados" rows="8" placeholder="Maria Silva;2025001;maria@email.com;ALUNO;Informática;2A"></textarea>
+            <textarea id="dados" name="dados" rows="8" placeholder="Maria Silva;2025001;maria@email.com;ALUNO;;63-2"></textarea>
         </div>
 
         <div class="acoes">

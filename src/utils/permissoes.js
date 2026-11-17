@@ -14,4 +14,12 @@ function perfisGerenciaveis(perfilLogado) {
     return [...(PODE_CRIAR[perfilLogado] || [])];
 }
 
-module.exports = { PERFIS, PODE_CRIAR, podeGerenciar, perfisGerenciaveis };
+function podeGerenciarCalendario(perfilLogado) {
+    return perfilLogado === 'DIRECAO' || perfilLogado === 'COORDENACAO';
+}
+
+function podeGerenciarRestricoes(perfilLogado) {
+    return perfilLogado === 'DIRECAO';
+}
+
+module.exports = { PERFIS, PODE_CRIAR, podeGerenciar, perfisGerenciaveis, podeGerenciarCalendario, podeGerenciarRestricoes };

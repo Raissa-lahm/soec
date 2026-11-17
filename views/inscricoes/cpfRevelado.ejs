@@ -1,0 +1,6 @@
+<% var titulo = 'CPF revelado' %>
+<%- include('../partials/header') %>
+<div class="titulo-pagina"><h1><%= titulo %></h1></div>
+<div class="alerta alerta-aviso"><strong>CPF:</strong> <%= cpf %><p>Esta visualização foi registrada na auditoria.</p></div>
+<a class="botao botao-secundario" href="/eventos/<%= eventoId %>/inscricoes">Voltar às inscrições</a>
+<%- include('../partials/footer') %>

@@ -23,8 +23,14 @@ const inscricaoRoutes = require('./routes/inscricaoRoutes');
 const equipeRoutes = require('./routes/equipeRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const horarioRoutes = require('./routes/horarioRoutes');
+const InscricaoModel = require('./models/inscricaoModel');
 
 const app = express();
+
+const expiracaoInscricoes = setInterval(() => {
+    InscricaoModel.expirarVencidas().catch((erro) => console.error('[SOEC] Falha ao expirar inscrições:', erro.message));
+}, 10 * 60 * 1000);
+expiracaoInscricoes.unref();
 
 app.use(helmet({ contentSecurityPolicy: false }));
 

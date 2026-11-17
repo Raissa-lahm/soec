@@ -1,41 +1,15 @@
-<% var titulo = 'Calendario' %>
+<% var titulo='Calendário'; const dd=x=>{const p=String(x).slice(0,10).split('-');return `${p[2]}/${p[1]}/${p[0]}`}; %>
 <%- include('partials/header') %>
-
-<div class="titulo-pagina">
-    <h1>Calend&aacute;rio institucional</h1>
-</div>
-
-<section class="calendario" aria-label="Calendario institucional">
-    <div class="calendario-cabecalho">
-        <a class="calendario-seta" href="/calendario?mes=<%= mesAnterior.mes %>&amp;ano=<%= mesAnterior.ano %>" aria-label="Mes anterior">&#8592;</a>
-        <h2><%= mesNome %></h2>
-        <a class="calendario-seta" href="/calendario?mes=<%= mesProximo.mes %>&amp;ano=<%= mesProximo.ano %>" aria-label="Proximo mes">&#8594;</a>
-    </div>
-
-    <div class="calendario-grade" role="grid" aria-label="<%= mesNome %>">
-        <% ['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SAB'].forEach(dia => { %>
-            <div class="calendario-semana-dia" role="columnheader"><%= dia %></div>
-        <% }) %>
-        <% semanas.forEach(semana => { %>
-            <% semana.forEach(celula => { %>
-                <div class="calendario-celula <%= celula.estaNoMes ? '' : 'fora-do-mes' %> <%= celula.ehHoje ? 'hoje' : '' %>" role="gridcell">
-                    <span class="calendario-numero"><%= celula.dia %></span>
-                    <div class="calendario-eventos">
-                        <% celula.eventos.forEach(evento => { %>
-                            <a class="evento-calendario" href="/eventos/<%= evento.id %>" title="<%= evento.titulo %> - <%= evento.horario %>">
-                                <span class="evento-horario"><%= evento.horario %></span>
-                                <span class="evento-nome"><%= evento.titulo %></span>
-                            </a>
-                        <% }) %>
-                    </div>
-                </div>
-            <% }) %>
-        <% }) %>
-    </div>
-
-    <% if (!temEventos) { %>
-        <p class="calendario-vazio">Nenhum evento neste mes.</p>
-    <% } %>
-</section>
-
+<div class="titulo-pagina"><h1>Calendário letivo e eventos</h1></div>
+<% if(trimestre){ %><div class="alerta alerta-aviso"><strong><%= trimestre.numero %>º trimestre</strong> · <%= dd(trimestre.inicio) %> a <%= dd(trimestre.fim) %> · faltam <%= trimestre.dias_restantes %> dias</div><% } %>
+<form class="barra-filtros" action="/calendario" method="GET"><div class="campo"><label>Curso</label><select name="curso_id"><option value="">Meu escopo / geral</option><% cursos.forEach(c=>{ %><option value="<%= c.id %>" <%= Number(filtroCurso)===c.id?'selected':'' %>><%= c.nome %></option><% }) %></select></div><div class="campo"><label>Série</label><select name="serie"><option value="">Todas</option><option value="1" <%= Number(filtroSerie)===1?'selected':'' %>>1ª</option><option value="2" <%= Number(filtroSerie)===2?'selected':'' %>>2ª</option><option value="3" <%= Number(filtroSerie)===3?'selected':'' %>>3ª</option></select></div><input type="hidden" name="mes" value="<%= mesAtual.mes %>"><input type="hidden" name="ano" value="<%= mesAtual.ano %>"><button class="botao botao-secundario">Filtrar</button><a href="/calendario?visao=<%= modoAgenda?'grade':'agenda' %>&amp;mes=<%= mesAtual.mes %>&amp;ano=<%= mesAtual.ano %>&amp;curso_id=<%= filtroCurso||'' %>&amp;serie=<%= filtroSerie||'' %>" class="botao botao-secundario">Ver <%= modoAgenda?'grade':'agenda' %></a></form>
+<% if(modoAgenda){ %><section class="form-cartao"><h2>Agenda de <%= mesNome %></h2><p><a href="/calendario?visao=agenda&amp;mes=<%= mesAnterior.mes %>&amp;ano=<%= mesAnterior.ano %>">← Mês anterior</a> · <a href="/calendario?visao=agenda&amp;mes=<%= mesProximo.mes %>&amp;ano=<%= mesProximo.ano %>">Mês seguinte →</a></p><% if(!agendaItens.length){ %><p>Nenhuma data ou evento neste mês.</p><% }else{ %><ul><% agendaItens.forEach(item=>{ %><li><strong><%= dd(item.data) %></strong> · <%= item.url?`<a href="${item.url}">${item.titulo}</a>`:item.titulo %> (<%= item.subtitulo %>)<%= item.semAula?' — sem aula':'' %></li><% }) %></ul><% } %></section><% }else{ %>
+<section class="calendario" aria-label="Calendário institucional"><div class="calendario-cabecalho"><a class="calendario-seta" href="/calendario?mes=<%= mesAnterior.mes %>&amp;ano=<%= mesAnterior.ano %>&amp;visao=grade&amp;curso_id=<%= filtroCurso||'' %>&amp;serie=<%= filtroSerie||'' %>" aria-label="Mês anterior">&#8592;</a><h2><%= mesNome %></h2><a class="calendario-seta" href="/calendario?mes=<%= mesProximo.mes %>&amp;ano=<%= mesProximo.ano %>&amp;visao=grade&amp;curso_id=<%= filtroCurso||'' %>&amp;serie=<%= filtroSerie||'' %>" aria-label="Próximo mês">&#8594;</a></div>
+<div class="calendario-grade" role="grid" aria-label="<%= mesNome %>"><% ['DOM','SEG','TER','QUA','QUI','SEX','SAB'].forEach(dia=>{ %><div class="calendario-semana-dia" role="columnheader"><%= dia %></div><% }) %>
+<% semanas.forEach(semana=>semana.forEach(celula=>{ %><div class="calendario-celula <%= celula.estaNoMes?'':'fora-do-mes' %> <%= celula.ehHoje?'hoje':'' %>" role="gridcell"><span class="calendario-numero"><%= celula.dia %></span><div class="calendario-eventos">
+<% celula.eventos.forEach(e=>{ %><a class="evento-calendario" href="/eventos/<%= e.id %>" title="<%= e.titulo %> - <%= e.horario %>"><span class="evento-horario"><%= e.horario %></span><span class="evento-nome"><%= e.titulo %></span></a><% }) %>
+<% celula.datas.forEach(d=>{ %><span class="data-calendario tipo-<%= d.tipo.toLowerCase() %>" title="<%= d.titulo %><%= d.curso_nome?' — '+d.curso_nome:'' %>"><%= d.titulo %></span><% }) %></div></div><% })) %></div>
+<div class="legenda-calendario"><span class="tipo-feriado">Feriado</span><span class="tipo-recesso">Recesso</span><span class="tipo-prova_final">Prova final</span><span class="tipo-outro">Outras datas</span><span class="evento-calendario">Evento</span></div>
+<% if(!temEventos){ %><p class="calendario-vazio">Nenhum evento ou data letiva neste mês.</p><% } %></section><% } %>
+<section class="form-cartao"><h2>Próximos marcos</h2><% if(!datasAgenda.length){ %><p>Nenhuma data letiva cadastrada para o mês.</p><% }else{ %><ul><% datasAgenda.slice(0,5).forEach(d=>{ %><li><%= dd(d.data_inicio) %> — <%= d.titulo %></li><% }) %></ul><% } %></section>
 <%- include('partials/footer') %>

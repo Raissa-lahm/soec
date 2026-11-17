@@ -59,3 +59,42 @@ npm run dev
 npm start
 npm run criar-direcao
 ```
+
+## Cursos, turmas e alunos
+
+O CIMOL possui oito cursos numerados: 1 Eletrônica, 2 Eletrotécnica, 3 Mecânica, 4 Móveis, 5 Design de Móveis, 6 Informática, 7 Meio Ambiente e 8 Química. As turmas cobrem as séries 1 a 3; o código é gerado no formato `[curso][série][-subturma]`, por exemplo `63-2` (Informática, 3ª série, subturma 2) ou `63` (turma única). A gestão administra o ano letivo, turmas e datas em `/admin/gestao-escolar`. O cadastro/importação de alunos exige uma turma ativa do ano vigente; os campos de texto antigos `usuarios.curso` e `usuarios.turma` permanecem preenchidos para compatibilidade.
+
+Para mapear registros antigos, `npm run migrar-curso-turma` somente simula e lista os casos sem correspondência. Revise o relatório e aplique com `npm run migrar-curso-turma -- --apply`. O script só associa códigos inequívocos; revise manualmente os demais em `/admin/alunos-sem-turma`.
+
+## Migrações
+
+- Banco novo: execute `database/schema.sql`, que já inclui a estrutura completa da Fase 1 e não cria usuários de teste. Não é necessário rodar `003` depois dele.
+- Banco existente: execute `002_primeiro_acesso_seguro.sql` se ainda não tiver aplicado essa migração; depois execute `003_fase1_cursos_eventos_calendario.sql`. A migração 003 é idempotente e acrescenta cursos/turmas, público e valores de eventos, inscrições, restrições e calendário.
+- `database/seed_dev.sql` é exclusivamente para desenvolvimento e só deve ser executado depois do schema.
+
+O teste transacional completo de schema/migração exige um PostgreSQL descartável separado do banco real: defina `SOEC_TEST_DATABASE_URL` e rode `npm run test:migracao`. O script cria schemas dentro de uma transação e termina com `ROLLBACK`.
+
+## Eventos, inscrições e restrições
+
+Eventos podem ser individuais, por equipe ou ambos; rascunho, aberto, encerrado ou cancelado; gratuitos ou pagos; internos ou externos; com transporte, limite de transporte, público por curso/série e dados exigidos. As inscrições congelam o valor no momento do pedido, entram como pendentes ou na lista de espera, e expiram ao vencer o prazo de pagamento. Cancelamento, expiração e promoção da lista de espera usam transação com bloqueio da linha do evento para proteger as vagas. Direção e Coordenação confirmam pagamentos e autorizações; a Direção também vê o indicador de restrição.
+
+Somente a Direção pode criar, consultar e revogar restrições em `/admin/restricoes`. O campo de referência aceita apenas uma anotação curta (por exemplo, “Ata nº 12/2026”); não insira relatos ou dados pessoais. A referência não é registrada na auditoria nem exibida a alunos, professores ou Coordenação. Para o aluno, a causa é sempre apresentada com a mesma mensagem genérica; em convites e inclusão em equipe a mensagem também é genérica.
+
+## CPF e privacidade
+
+Configure `CPF_CRYPTO_KEY` apenas se houver evento que exija CPF. Gere 32 bytes com `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`, guarde o resultado fora do repositório e mantenha cópias de segurança controladas. Se a chave for perdida ou trocada, CPFs cifrados existentes não poderão ser recuperados. `CPF_HASH_KEY` é opcional e separa a chave de unicidade HMAC da chave de cifra. O CPF é validado, cifrado com AES-256-GCM e indexado por HMAC-SHA256; nunca aparece em log ou auditoria. Nas telas de inscrição aparece mascarado; a revelação explícita por Direção/Coordenação fica registrada como `VER_CPF`.
+
+Política de retenção sugerida: coletar CPF somente quando necessário para o evento, limitar acesso à equipe responsável, remover ou anonimizar o CPF após o fim do evento e do período operacional para prestação de contas/contestação, e revisar os backups segundo a mesma política. A escola deve definir a finalidade, base legal, prazos e atendimento a solicitações dos titulares antes da implantação; a ANPD orienta que se coletem/processam apenas dados necessários ao objetivo [Guia de Segurança da Informação para Agentes de Tratamento de Pequeno Porte](https://www.gov.br/anpd/pt-br/centrais-de-conteudo/materiais-educativos-e-publicacoes/processo-guia-orientativo-sobre-seguranca-da-informacao-para-agentes-de-tratamento-de-pequeno-porte.pdf).
+
+## Calendário letivo
+
+Direção e Coordenação cadastram anos, trimestres e datas gerais ou por curso/série em `/admin/gestao-escolar`. `/calendario` mostra uma grade mensal com eventos e datas letivas; também oferece visão de agenda. Ao criar/editar evento em data de feriado, recesso, prova final ou sem aula, ou fora de um ano letivo cadastrado, a aplicação apresenta um aviso e exige confirmação explícita. Datas do tipo PostgreSQL `DATE` são mantidas como `YYYY-MM-DD` no Node para evitar mudança de dia por fuso.
+
+## Testes da Fase 1
+
+```sh
+npm test
+# Em banco PostgreSQL descartável, nunca apontando para produção:
+npm run test:migracao
+npm start
+```

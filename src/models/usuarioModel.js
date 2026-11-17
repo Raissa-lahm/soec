@@ -1,7 +1,7 @@
 const pool = require('../config/database');
 
 const COLUNAS = `id, nome, email, matricula, perfil, curso, turma, criado_em,
-    senha IS NULL AS pendente, deve_trocar_senha`;
+    curso_id, turma_id, senha IS NULL AS pendente, deve_trocar_senha`;
 
 const UsuarioModel = {
     async buscarPorMatricula(matricula) {
@@ -30,28 +30,28 @@ const UsuarioModel = {
             : await pool.query(`SELECT ${COLUNAS} FROM usuarios ORDER BY nome`);
         return r.rows;
     },
-    async criar({ nome, email, matricula, senhaHash = null, perfil, curso, turma, deveTrocarSenha = false }) {
+    async criar({ nome, email, matricula, senhaHash = null, perfil, curso, turma, cursoId = null, turmaId = null, deveTrocarSenha = false }) {
         const r = await pool.query(
-            `INSERT INTO usuarios (nome,email,matricula,senha,perfil,curso,turma,deve_trocar_senha)
-             VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+            `INSERT INTO usuarios (nome,email,matricula,senha,perfil,curso,turma,curso_id,turma_id,deve_trocar_senha)
+             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
              RETURNING id,nome,email,matricula,perfil,curso,turma,deve_trocar_senha`,
-            [nome, email, matricula, senhaHash, perfil, curso || null, turma || null, deveTrocarSenha]
+            [nome, email, matricula, senhaHash, perfil, curso || null, turma || null, cursoId, turmaId, deveTrocarSenha]
         );
         return r.rows[0];
     },
-    async criarPendente({ nome, email, matricula, perfil, curso, turma, codigoHash, validadeHoras = 48 }) {
+    async criarPendente({ nome, email, matricula, perfil, curso, turma, cursoId = null, codigoHash, validadeHoras = 48 }) {
         const r = await pool.query(
-            `INSERT INTO usuarios (nome,email,matricula,senha,perfil,curso,turma,codigo_ativacao_hash,codigo_expira_em,tentativas_ativacao,deve_trocar_senha)
-             VALUES ($1,$2,$3,NULL,$4,$5,$6,$7,NOW()+make_interval(hours => $8),0,FALSE)
+            `INSERT INTO usuarios (nome,email,matricula,senha,perfil,curso,turma,curso_id,codigo_ativacao_hash,codigo_expira_em,tentativas_ativacao,deve_trocar_senha)
+             VALUES ($1,$2,$3,NULL,$4,$5,$6,$7,$8,NOW()+make_interval(hours => $9),0,FALSE)
              RETURNING id,nome,email,matricula,perfil`,
-            [nome,email,matricula,perfil,curso || null,turma || null,codigoHash,validadeHoras]
+            [nome,email,matricula,perfil,curso || null,turma || null,cursoId,codigoHash,validadeHoras]
         );
         return r.rows[0];
     },
-    async atualizar(id, { nome, email, matricula, perfil, curso, turma }) {
+    async atualizar(id, { nome, email, matricula, perfil, curso, turma, cursoId = null, turmaId = null }) {
         const r = await pool.query(
-            `UPDATE usuarios SET nome=$1,email=$2,matricula=$3,perfil=$4,curso=$5,turma=$6 WHERE id=$7 RETURNING ${COLUNAS}`,
-            [nome,email,matricula,perfil,curso || null,turma || null,id]
+            `UPDATE usuarios SET nome=$1,email=$2,matricula=$3,perfil=$4,curso=$5,turma=$6,curso_id=$7,turma_id=$8 WHERE id=$9 RETURNING ${COLUNAS}`,
+            [nome,email,matricula,perfil,curso || null,turma || null,cursoId,turmaId,id]
         );
         return r.rows[0];
     },

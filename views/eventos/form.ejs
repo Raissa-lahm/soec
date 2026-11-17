@@ -1,54 +1,40 @@
-<% var titulo = evento ? 'Editar evento' : 'Novo evento' %>
+<% var titulo = evento ? 'Editar evento' : 'Novo evento'; const v = (key, fallback='') => evento && evento[key] != null ? evento[key] : fallback; const localDate = x => x ? new Date(x).toISOString().slice(0,16) : ''; %>
 <%- include('../partials/header') %>
-
-<div class="titulo-pagina">
-    <h1><%= titulo %></h1>
-</div>
-
+<div class="titulo-pagina"><h1><%= titulo %></h1></div>
 <div class="form-cartao">
-    <% if (typeof erro !== 'undefined' && erro) { %>
-        <div class="alerta alerta-erro"><%= erro %></div>
-    <% } %>
-
+    <% if (typeof erro !== 'undefined' && erro) { %><div class="alerta alerta-erro"><%= erro %></div><% } %>
+    <% if (typeof avisos !== 'undefined' && avisos && avisos.length) { %><div class="alerta alerta-aviso"><strong>Conflitos encontrados:</strong><ul><% avisos.forEach(a=>{ %><li><%= a.titulo %> (<%= a.tipo %>)</li><% }) %></ul><label><input type="checkbox" name="confirmar_conflito" value="1"> Confirmo que quero salvar mesmo assim</label></div><% } %>
     <form action="<%= acao %>" method="POST">
-        <div class="campo">
-            <label for="titulo">Título *</label>
-            <input type="text" id="titulo" name="titulo" value="<%= evento ? evento.titulo : '' %>" required>
-        </div>
-
-        <div class="campo">
-            <label for="descricao">Descrição</label>
-            <textarea id="descricao" name="descricao" rows="4"><%= evento ? (evento.descricao || '') : '' %></textarea>
-        </div>
-
-        <div class="linha-form">
-            <div class="campo">
-                <label for="tipo">Categoria/Tipo *</label>
-                <input type="text" id="tipo" name="tipo" placeholder="Ex: ESPORTIVO, CULTURAL, ACADEMICO" value="<%= evento ? evento.tipo : '' %>" required>
-            </div>
-            <div class="campo">
-                <label for="vagas_limite">Limite de vagas (0 = sem limite)</label>
-                <input type="number" id="vagas_limite" name="vagas_limite" min="0" value="<%= evento ? evento.vagas_limite : 0 %>">
-            </div>
-        </div>
-
-        <div class="linha-form">
-            <div class="campo">
-                <label for="data_evento">Data e hora *</label>
-                <input type="datetime-local" id="data_evento" name="data_evento"
-                       value="<%= evento ? new Date(evento.data_evento).toISOString().slice(0,16) : '' %>" required>
-            </div>
-            <div class="campo">
-                <label for="local">Local</label>
-                <input type="text" id="local" name="local" value="<%= evento ? (evento.local || '') : '' %>">
-            </div>
-        </div>
-
-        <div class="acoes">
-            <button type="submit" class="botao botao-primario">Salvar</button>
-            <a href="/eventos" class="botao botao-secundario">Cancelar</a>
-        </div>
+        <h2>Dados gerais</h2>
+        <div class="campo"><label for="titulo">Título *</label><input id="titulo" name="titulo" maxlength="150" value="<%= v('titulo') %>" required></div>
+        <div class="campo"><label for="descricao">Descrição</label><textarea id="descricao" name="descricao" rows="4"><%= v('descricao') %></textarea></div>
+        <div class="linha-form"><div class="campo"><label>Categoria *</label><input name="tipo" value="<%= v('tipo') %>" required></div>
+            <div class="campo"><label>Data e hora *</label><input type="datetime-local" name="data_evento" value="<%= localDate(v('data_evento')) %>" required></div></div>
+        <div class="linha-form"><div class="campo"><label>Local</label><input name="local" value="<%= v('local') %>"></div>
+            <div class="campo"><label>Vagas (0 = ilimitadas)</label><input type="number" min="0" name="vagas_limite" value="<%= v('vagas_limite',0) %>"></div></div>
+        <div class="linha-form"><div class="campo"><label>Modo de inscrição</label><select name="modo_inscricao"><% modos.forEach(m=>{ %><option <%= v('modo_inscricao','INDIVIDUAL')===m?'selected':'' %>><%= m %></option><% }) %></select></div>
+            <div class="campo"><label>Status</label><select name="status"><% statusDisponiveis.forEach(s=>{ %><option <%= v('status','ABERTO')===s?'selected':'' %>><%= s %></option><% }) %></select></div></div>
+        <h2>Público-alvo</h2><p>Sem cursos/séries selecionados, o evento fica aberto a todos.</p>
+        <div class="linha-form"><% cursos.forEach(c=>{ %><label><input type="checkbox" name="curso_ids" value="<%= c.id %>" <%= (evento?.curso_ids||[]).map(Number).includes(c.id)?'checked':'' %>> <%= c.nome %></label><% }) %></div>
+        <div class="linha-form"><% [1,2,3].forEach(s=>{ %><label><input type="checkbox" name="series_permitidas" value="<%= s %>" <%= (evento?.series_permitidas||[]).map(Number).includes(s)?'checked':'' %>> <%= s %>ª série</label><% }) %></div>
+        <h2>Inscrição e valores</h2>
+        <div class="linha-form"><div class="campo"><label>Inscrições começam</label><input type="datetime-local" name="inscricao_inicio" value="<%= localDate(v('inscricao_inicio')) %>"></div><div class="campo"><label>Inscrições terminam</label><input type="datetime-local" name="inscricao_fim" value="<%= localDate(v('inscricao_fim')) %>"></div></div>
+        <div class="linha-form"><div class="campo"><label>Valor da inscrição (R$)</label><input type="number" name="valor_inscricao" min="0" step="0.01" value="<%= v('valor_inscricao',0) %>"></div><div class="campo"><label>Prazo de pagamento</label><input type="datetime-local" name="prazo_pagamento" value="<%= localDate(v('prazo_pagamento')) %>"></div></div>
+        <h2>Local externo e transporte</h2>
+        <label><input type="checkbox" id="externo" name="externo" <%= v('externo')?'checked':'' %>> Evento externo</label>
+        <div id="campos-externo"><div class="linha-form"><div class="campo"><label>Endereço</label><input name="endereco" value="<%= v('endereco') %>"></div><div class="campo"><label>Ponto de encontro</label><input name="ponto_encontro" value="<%= v('ponto_encontro') %>"></div></div>
+        <div class="linha-form"><div class="campo"><label>Saída</label><input type="datetime-local" name="saida_em" value="<%= localDate(v('saida_em')) %>"></div><div class="campo"><label>Retorno</label><input type="datetime-local" name="retorno_em" value="<%= localDate(v('retorno_em')) %>"></div></div></div>
+        <label><input type="checkbox" id="transporte_ofertado" name="transporte_ofertado" <%= v('transporte_ofertado')?'checked':'' %>> Oferece transporte</label>
+        <div id="campos-transporte"><div class="linha-form"><div class="campo"><label>Valor do transporte (R$)</label><input name="valor_transporte" type="number" min="0" step="0.01" value="<%= v('valor_transporte',0) %>"></div><div class="campo"><label>Vagas de transporte (vazio = ilimitadas)</label><input name="vagas_transporte" type="number" min="0" value="<%= v('vagas_transporte') %>"></div></div>
+        <label><input type="checkbox" name="transporte_obrigatorio" <%= v('transporte_obrigatorio')?'checked':'' %>> Transporte obrigatório</label></div>
+        <h2>Dados exigidos</h2>
+        <label><input type="checkbox" name="exige_cpf" <%= v('exige_cpf')?'checked':'' %>> Exigir CPF</label>
+        <label><input type="checkbox" name="exige_contato_emergencia" <%= v('exige_contato_emergencia')?'checked':'' %>> Exigir contato de emergência</label>
+        <label><input type="checkbox" name="exige_autorizacao_responsavel" <%= v('exige_autorizacao_responsavel')?'checked':'' %>> Exigir autorização do responsável</label>
+        <div class="acoes"><button class="botao botao-primario">Salvar</button><a href="/eventos" class="botao botao-secundario">Cancelar</a></div>
     </form>
 </div>
-
+<script>
+(()=>{const ext=document.getElementById('externo'),trans=document.getElementById('transporte_ofertado');const sync=()=>{document.getElementById('campos-externo').hidden=!ext.checked;document.getElementById('campos-transporte').hidden=!trans.checked;};ext.addEventListener('change',sync);trans.addEventListener('change',sync);sync();})();
+</script>
 <%- include('../partials/footer') %>

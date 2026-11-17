@@ -37,5 +37,6 @@ function somentePerfis(...perfisPermitidos) {
 
 // Middleware pronto para as areas de gestao (coordenacao + direcao)
 const somenteGestao = somentePerfis('COORDENACAO', 'DIRECAO');
+const somenteDirecao = somentePerfis('DIRECAO');
 
-module.exports = { somentePerfis, somenteGestao };
+module.exports = { somentePerfis, somenteGestao, somenteDirecao };

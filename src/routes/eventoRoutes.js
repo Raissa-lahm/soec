@@ -9,7 +9,7 @@ const router = express.Router();
 const EventoController = require('../controllers/eventoController');
 const InscricaoController = require('../controllers/inscricaoController');
 const autenticado = require('../middlewares/authMiddleware');
-const { somenteGestao } = require('../middlewares/permissaoMiddleware');
+const { somenteGestao, somentePerfis } = require('../middlewares/permissaoMiddleware');
 
 // Pesquisa, filtro por categoria/data e listagem geral
 router.get('/eventos', autenticado, EventoController.listar);
@@ -24,7 +24,8 @@ router.put('/eventos/:id', autenticado, somenteGestao, EventoController.atualiza
 router.delete('/eventos/:id', autenticado, somenteGestao, EventoController.excluir);
 
 // Inscricao do aluno/professor em um evento
-router.post('/eventos/:id/inscrever', autenticado, EventoController.inscrever);
+router.get('/eventos/:id/inscrever', autenticado, somentePerfis('ALUNO','PROFESSOR'), EventoController.exibirInscricao);
+router.post('/eventos/:id/inscrever', autenticado, somentePerfis('ALUNO','PROFESSOR'), EventoController.inscrever);
 router.post('/eventos/:id/cancelar-inscricao', autenticado, EventoController.cancelarInscricao);
 
 // Gestao de inscritos de um evento especifico (somente gestao)

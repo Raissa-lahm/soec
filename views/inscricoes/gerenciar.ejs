@@ -1,48 +1,12 @@
-<% var titulo = 'Inscritos - ' + evento.titulo %>
+<% var titulo = `Inscrições: ${evento.titulo}`; const dinheiro=n=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(Number(n||0)); %>
 <%- include('../partials/header') %>
-
-<div class="titulo-pagina">
-    <div>
-        <h1>Inscritos no evento</h1>
-        <p><a href="/eventos/<%= evento.id %>">&larr; Voltar para <%= evento.titulo %></a></p>
-    </div>
-</div>
-
-<div class="cartao" style="margin-bottom: 1rem;">
-    <strong>Total de inscritos:</strong> <%= inscricoes.length %><%= evento.vagas_limite > 0 ? ' / ' + evento.vagas_limite : ' (sem limite de vagas)' %>
-</div>
-
-<% if (inscricoes.length === 0) { %>
-    <div class="cartao"><p>Nenhum inscrito neste evento ainda.</p></div>
-<% } else { %>
-    <div class="tabela-wrapper">
-        <table>
-            <thead>
-                <tr>
-                    <th>Nome</th>
-                    <th>Matrícula</th>
-                    <th>Turma</th>
-                    <th>Data da inscrição</th>
-                    <th>Ações</th>
-                </tr>
-            </thead>
-            <tbody>
-                <% inscricoes.forEach(i => { %>
-                    <tr>
-                        <td><%= i.nome %></td>
-                        <td><%= i.matricula %></td>
-                        <td><%= i.turma || '-' %></td>
-                        <td><%= new Date(i.data_inscricao).toLocaleString('pt-BR') %></td>
-                        <td>
-                            <form class="form-confirmar-exclusao" data-mensagem="Remover a inscrição de <%= i.nome %>?" action="/inscricoes/<%= i.id %>?_method=DELETE" method="POST">
-                                <button type="submit" class="botao botao-perigo">Remover</button>
-                            </form>
-                        </td>
-                    </tr>
-                <% }) %>
-            </tbody>
-        </table>
-    </div>
-<% } %>
-
+<div class="titulo-pagina"><h1><%= titulo %></h1><a href="/eventos/<%= evento.id %>" class="botao botao-secundario">Voltar ao evento</a></div>
+<div class="cartao"><p>Confirmadas: <strong><%= totais.confirmadas %></strong> · Pendentes: <strong><%= totais.pendentes %></strong> · Lista de espera: <strong><%= totais.lista_espera %></strong> · Arrecadado: <strong><%= dinheiro(totais.arrecadado) %></strong> · A receber: <strong><%= dinheiro(totais.a_receber) %></strong> · Transporte usado: <strong><%= totais.transporte_usado %><%= evento.vagas_transporte===null?'':`/${evento.vagas_transporte}` %></strong></p></div>
+<div class="tabela-responsiva"><table><thead><tr><th>Aluno</th><th>Status</th><th>Valor</th><th>Pagamento</th><th>Autorização</th><th>Dados</th><th>Ações</th></tr></thead><tbody>
+<% inscricoes.forEach(i=>{ %><tr><td><%= i.nome %> — <%= i.matricula %><% if(perfilLogado==='DIRECAO'&&i.restrito){ %><span class="tag">restrito</span><% } %></td><td><%= i.status %></td><td><%= dinheiro(i.valor_total) %><% if(i.usa_transporte){ %> (transporte)<% } %></td>
+<td><%= i.pagamento_status %><% if(i.pagamento_status==='PENDENTE'&&i.status!=='LISTA_ESPERA'){ %><form action="/inscricoes/<%= i.id %>/pagamento" method="POST"><select name="forma"><option>PIX</option><option>DINHEIRO</option><option>SECRETARIA</option><option>OUTRO</option></select><button class="botao botao-primario">Confirmar pagamento</button></form><form action="/inscricoes/<%= i.id %>/isentar" method="POST"><input name="motivo" maxlength="150" placeholder="Motivo da isenção" required><button class="botao botao-secundario">Isentar</button></form><% } %></td>
+<td><%= i.autorizacao_recebida?'Recebida':(i.exige_autorizacao_responsavel?'Pendente':'Não exigida') %><% if(i.exige_autorizacao_responsavel&&!i.autorizacao_recebida&&i.status!=='LISTA_ESPERA'){ %><form action="/inscricoes/<%= i.id %>/autorizacao" method="POST"><button class="botao botao-primario">Confirmar recebimento</button></form><% } %></td>
+<td><% if(i.exige_cpf){ %><%= i.cpf_mascarado|| (i.tem_cpf?'CPF cadastrado':'CPF ausente') %><% if(i.tem_cpf){ %><form action="/inscricoes/<%= i.id %>/cpf/revelar?evento_id=<%= evento.id %>" method="POST"><button class="botao botao-secundario">Revelar CPF</button></form><% } %><% } %><% if(i.contato_emergencia_nome){ %><br>Contato: <%= i.contato_emergencia_nome %> — <%= i.contato_emergencia_telefone %><% } %></td>
+<td><% if(!['CANCELADA','EXPIRADA'].includes(i.status)){ %><form action="/inscricoes/<%= i.id %>/cancelar" method="POST"><button class="botao botao-perigo">Cancelar</button></form><% } %></td></tr><% }) %>
+</tbody></table></div>
 <%- include('../partials/footer') %>

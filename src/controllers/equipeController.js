@@ -6,6 +6,8 @@
 const EquipeModel = require('../models/equipeModel');
 const EventoModel = require('../models/eventoModel');
 const UsuarioModel = require('../models/usuarioModel');
+const InscricaoModel = require('../models/inscricaoModel');
+const { verificarElegibilidade } = require('../utils/elegibilidade');
 
 const EquipeController = {
 
@@ -84,6 +86,16 @@ const EquipeController = {
         try {
             const equipeId = req.params.id;
             const usuarioId = req.session.usuario.id;
+            const equipe = await EquipeModel.buscarPorId(equipeId);
+            if (!equipe) return res.redirect('/eventos');
+            const usuario = await UsuarioModel.buscarPorId(usuarioId);
+            const evento = await EventoModel.buscarPorId(equipe.evento_id);
+            const elegivel = usuario?.perfil === 'ALUNO' && await InscricaoModel.jaInscrito(usuarioId,equipe.evento_id) &&
+                (await verificarElegibilidade(usuario,evento,{verificarInscricao:false,verificarVagas:false,validarDados:false})).ok;
+            if (!elegivel) {
+                const membros = await EquipeModel.listarMembros(equipeId);
+                return res.status(403).render('equipes/detalhes',{equipe,membros,jaEhMembro:false,erro:'Este aluno não pode ser adicionado a esta equipe.'});
+            }
             const jaEhMembro = await EquipeModel.jaEhMembro(equipeId, usuarioId);
             if (!jaEhMembro) {
                 await EquipeModel.adicionarMembro(equipeId, usuarioId);
@@ -109,14 +121,22 @@ const EquipeController = {
         try {
             const { matricula } = req.body;
             const usuarioAlvo = await UsuarioModel.buscarPorMatricula(matricula);
+            const equipe = await EquipeModel.buscarPorId(req.params.id);
 
             if (!usuarioAlvo) {
-                const equipe = await EquipeModel.buscarPorId(req.params.id);
                 const membros = await EquipeModel.listarMembros(req.params.id);
                 return res.status(400).render('equipes/detalhes', {
                     equipe, membros, jaEhMembro: false,
                     erro: 'Nenhum usuario encontrado com essa matricula.'
                 });
+            }
+
+            const evento=await EventoModel.buscarPorId(equipe.evento_id);
+            const elegivel=usuarioAlvo.perfil==='ALUNO' && await InscricaoModel.jaInscrito(usuarioAlvo.id,equipe.evento_id) &&
+                (await verificarElegibilidade(usuarioAlvo,evento,{verificarInscricao:false,verificarVagas:false,validarDados:false})).ok;
+            if(!elegivel) {
+                const membros=await EquipeModel.listarMembros(req.params.id);
+                return res.status(400).render('equipes/detalhes',{equipe,membros,jaEhMembro:false,erro:'Este aluno não pode ser adicionado a esta equipe.'});
             }
 
             const jaEhMembro = await EquipeModel.jaEhMembro(req.params.id, usuarioAlvo.id);

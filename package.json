@@ -6,7 +6,10 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "criar-direcao": "node scripts/criarDirecaoInicial.js"
+    "criar-direcao": "node scripts/criarDirecaoInicial.js",
+    "migrar-curso-turma": "node scripts/migrarCursoTurmaUsuarios.js",
+    "test": "node scripts/testarFase1.js",
+    "test:migracao": "node scripts/testarMigracao003.js"
   },
   "author": "",
   "license": "ISC",

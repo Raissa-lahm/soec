@@ -27,7 +27,7 @@
     <a href="/comunicados" class="<%= rotaAtual && rotaAtual.startsWith('/comunicados') ? 'ativo' : '' %>">Comunicados</a>
     <a href="/regulamentos" class="<%= rotaAtual && rotaAtual.startsWith('/regulamentos') ? 'ativo' : '' %>">Regulamentos</a>
     <a href="/horarios" class="<%= rotaAtual && rotaAtual.startsWith('/horarios') ? 'ativo' : '' %>">Horários</a>
-    <% if (usuarioLogado.perfil === 'ALUNO') { %>
+    <% if (usuarioLogado.perfil === 'ALUNO' || usuarioLogado.perfil === 'PROFESSOR') { %>
         <a href="/minhas-inscricoes" class="<%= rotaAtual && rotaAtual.startsWith('/minhas-inscricoes') ? 'ativo' : '' %>">Minhas inscrições</a>
     <% } %>
     <% if (usuarioLogado.perfil === 'COORDENACAO' || usuarioLogado.perfil === 'DIRECAO') { %>

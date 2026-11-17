@@ -420,6 +420,27 @@ tr:hover td { background: #f7f9f8; }
     font-weight: 700;
 }
 
+.data-calendario {
+    display: block;
+    overflow: hidden;
+    padding: 0.2rem 0.3rem;
+    border-left: 3px solid #d97706;
+    border-radius: 3px;
+    background: #fff7ed;
+    color: #7c2d12;
+    font-size: 0.7rem;
+    line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.tipo-feriado { background: #fee2e2; border-left-color: #dc2626; color: #7f1d1d; }
+.tipo-recesso, .tipo-sem_aula { background: #ffedd5; border-left-color: #ea580c; color: #7c2d12; }
+.tipo-prova_final, .tipo-recuperacao { background: #fef3c7; border-left-color: #ca8a04; color: #713f12; }
+.tipo-conselho, .tipo-reuniao_pais { background: #dbeafe; border-left-color: #2563eb; color: #1e3a8a; }
+.tipo-outro { background: #dcfce7; border-left-color: #16a34a; color: #14532d; }
+.legenda-calendario { display:flex; flex-wrap:wrap; gap:.5rem; padding:.8rem 0; }
+.legenda-calendario > * { padding:.2rem .45rem; border-radius:3px; font-size:.75rem; }
+
 .calendario-vazio {
     margin: 0;
     padding: 0.8rem 1rem;

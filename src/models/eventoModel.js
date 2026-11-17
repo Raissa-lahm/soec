@@ -15,7 +15,9 @@ const EventoModel = {
 
         let sql = `
             SELECT e.*, u.nome AS nome_criador,
-                   (SELECT COUNT(*) FROM inscricoes i WHERE i.evento_id = e.id) AS total_inscritos
+                   (SELECT COUNT(*) FROM inscricoes i WHERE i.evento_id = e.id AND i.status IN ('PENDENTE','CONFIRMADA')) AS total_inscritos,
+                   COALESCE((SELECT array_agg(ec.curso_id ORDER BY c.numero) FROM evento_cursos ec JOIN cursos c ON c.id=ec.curso_id WHERE ec.evento_id=e.id), ARRAY[]::int[]) AS curso_ids,
+                   COALESCE((SELECT array_agg(c.nome ORDER BY c.numero) FROM evento_cursos ec JOIN cursos c ON c.id=ec.curso_id WHERE ec.evento_id=e.id), ARRAY[]::text[]) AS curso_nomes
             FROM eventos e
             JOIN usuarios u ON u.id = e.criado_por
         `;
@@ -54,7 +56,7 @@ const EventoModel = {
                     EXTRACT(MONTH FROM data_evento)::int AS mes,
                     EXTRACT(DAY FROM data_evento)::int AS dia,
                     TO_CHAR(data_evento, 'HH24:MI') AS horario
-             FROM eventos
+             FROM eventos WHERE status IN ('ABERTO','ENCERRADO')
              ORDER BY data_evento ASC`
         );
         return resultado.rows;
@@ -64,7 +66,9 @@ const EventoModel = {
     async buscarPorId(id) {
         const resultado = await pool.query(
             `SELECT e.*, u.nome AS nome_criador,
-                    (SELECT COUNT(*) FROM inscricoes i WHERE i.evento_id = e.id) AS total_inscritos
+                    (SELECT COUNT(*) FROM inscricoes i WHERE i.evento_id = e.id AND i.status IN ('PENDENTE','CONFIRMADA')) AS total_inscritos,
+                    COALESCE((SELECT array_agg(ec.curso_id ORDER BY c.numero) FROM evento_cursos ec JOIN cursos c ON c.id=ec.curso_id WHERE ec.evento_id=e.id), ARRAY[]::int[]) AS curso_ids,
+                    COALESCE((SELECT array_agg(c.nome ORDER BY c.numero) FROM evento_cursos ec JOIN cursos c ON c.id=ec.curso_id WHERE ec.evento_id=e.id), ARRAY[]::text[]) AS curso_nomes
              FROM eventos e
              JOIN usuarios u ON u.id = e.criado_por
              WHERE e.id = $1`,
@@ -73,25 +77,28 @@ const EventoModel = {
         return resultado.rows[0];
     },
 
-    async criar({ titulo, descricao, tipo, data_evento, local, vagas_limite, criado_por }) {
-        const resultado = await pool.query(
-            `INSERT INTO eventos (titulo, descricao, tipo, data_evento, local, vagas_limite, criado_por)
-             VALUES ($1, $2, $3, $4, $5, $6, $7)
-             RETURNING *`,
-            [titulo, descricao, tipo, data_evento, local, vagas_limite || 0, criado_por]
-        );
-        return resultado.rows[0];
+    async criar(dados) {
+        const client = await pool.connect();
+        try {
+            await client.query('BEGIN');
+            const evento = await salvarEvento(client, dados);
+            await salvarCursos(client, evento.id, dados.curso_ids || []);
+            await client.query('COMMIT');
+            return evento;
+        } catch (error) { await client.query('ROLLBACK'); throw error; }
+        finally { client.release(); }
     },
 
-    async atualizar(id, { titulo, descricao, tipo, data_evento, local, vagas_limite }) {
-        const resultado = await pool.query(
-            `UPDATE eventos
-             SET titulo = $1, descricao = $2, tipo = $3, data_evento = $4, local = $5, vagas_limite = $6
-             WHERE id = $7
-             RETURNING *`,
-            [titulo, descricao, tipo, data_evento, local, vagas_limite || 0, id]
-        );
-        return resultado.rows[0];
+    async atualizar(id, dados) {
+        const client = await pool.connect();
+        try {
+            await client.query('BEGIN');
+            const evento = await salvarEvento(client, { ...dados, id });
+            await salvarCursos(client, id, dados.curso_ids || []);
+            await client.query('COMMIT');
+            return evento;
+        } catch (error) { await client.query('ROLLBACK'); throw error; }
+        finally { client.release(); }
     },
 
     async excluir(id) {
@@ -104,5 +111,20 @@ const EventoModel = {
         return resultado.rows.map(r => r.tipo);
     }
 };
+
+async function salvarEvento(client,d) {
+    const values=[d.titulo,d.descricao,d.tipo,d.data_evento,d.local,d.vagas_limite,d.criado_por,d.modo_inscricao,d.status,d.inscricao_inicio,d.inscricao_fim,d.valor_inscricao,d.prazo_pagamento,d.externo,d.endereco,d.ponto_encontro,d.saida_em,d.retorno_em,d.transporte_ofertado,d.transporte_obrigatorio,d.valor_transporte,d.vagas_transporte,d.exige_cpf,d.exige_contato_emergencia,d.exige_autorizacao_responsavel,d.series_permitidas];
+    const columns='titulo,descricao,tipo,data_evento,local,vagas_limite,criado_por,modo_inscricao,status,inscricao_inicio,inscricao_fim,valor_inscricao,prazo_pagamento,externo,endereco,ponto_encontro,saida_em,retorno_em,transporte_ofertado,transporte_obrigatorio,valor_transporte,vagas_transporte,exige_cpf,exige_contato_emergencia,exige_autorizacao_responsavel,series_permitidas';
+    if(d.id) {
+        const sets=columns.split(',').filter(c=>c!=='criado_por').map((c,i)=>`${c}=$${i+1}`).join(',');
+        const updateValues=values.filter((_,i)=>i!==6); updateValues.push(d.id);
+        const r=await client.query(`UPDATE eventos SET ${sets} WHERE id=$${updateValues.length} RETURNING *`,updateValues); return r.rows[0];
+    }
+    const r=await client.query(`INSERT INTO eventos(${columns}) VALUES(${values.map((_,i)=>`$${i+1}`).join(',')}) RETURNING *`,values); return r.rows[0];
+}
+async function salvarCursos(client,eventoId,cursoIds) {
+    await client.query('DELETE FROM evento_cursos WHERE evento_id=$1',[eventoId]);
+    for(const cursoId of [...new Set(cursoIds.map(Number).filter(Number.isInteger))]) await client.query('INSERT INTO evento_cursos(evento_id,curso_id) VALUES($1,$2)',[eventoId,cursoId]);
+}
 
 module.exports = EventoModel;
