@@ -738,3 +738,244 @@ tr:hover td { background: #f8faff; }
     .calendario { overflow-x: auto; }
     .calendario-grade { min-width: 560px; }
 }
+
+/* ----------------------- Periodos da gestao escolar ---------------------- */
+
+.gestao-periodos {
+    max-width: none;
+    margin: 0 0 1.5rem;
+}
+
+.gestao-periodos > h2 { margin: 0 0 1rem; }
+.gestao-periodos > h3.periodos-subtitulo {
+    margin: 1.5rem 0 .7rem;
+    padding-bottom: .55rem;
+    border-bottom: 1px solid #e5e9f1;
+    color: #34436a;
+    font-size: 1rem;
+}
+
+.lista-periodos { display: grid; gap: .65rem; }
+.linha-periodo {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: .75rem;
+    padding: .85rem 1rem;
+    border: 1px solid #e3e8f1;
+    border-radius: 12px;
+    background: linear-gradient(115deg, #fff, #f9faff);
+}
+
+.periodo-editar {
+    display: grid;
+    grid-template-columns: minmax(130px, .8fr) minmax(150px, 1fr) minmax(150px, 1fr) auto;
+    align-items: end;
+    gap: .75rem;
+    min-width: 0;
+    margin: 0;
+}
+.periodo-editar label { display: block; margin: 0; color: #566176; font-size: .78rem; font-weight: 650; }
+.periodo-editar input[type="date"] {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    min-height: 40px;
+    margin-top: .28rem;
+    padding: .48rem .55rem;
+    border: 1px solid #d4dae5;
+    border-radius: 8px;
+    background: white;
+    color: #263247;
+    font: inherit;
+    font-size: .88rem;
+}
+.periodo-nome { align-self: center; color: #34436a; font-size: .92rem; }
+.periodo-nome strong { display: block; color: #172554; font-size: 1.1rem; }
+.periodo-excluir { margin: 0; }
+.periodo-editar .botao, .periodo-excluir .botao { white-space: nowrap; }
+
+@media (max-width: 850px) {
+    .linha-periodo { grid-template-columns: 1fr; }
+    .periodo-editar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .periodo-nome { grid-column: 1 / -1; }
+    .periodo-excluir { justify-self: start; }
+}
+
+@media (max-width: 480px) {
+    .linha-periodo { padding: .75rem; }
+    .periodo-editar { gap: .6rem; }
+    .periodo-editar .botao { grid-column: 1 / -1; }
+}
+
+/* ------------------------- Pagina de gestao escolar ---------------------- */
+
+.gestao-escolar { display: grid; gap: 1.25rem; }
+.gestao-hero {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    margin-bottom: .25rem;
+    padding: clamp(1.25rem, 3vw, 2rem);
+    border: 1px solid #dfe5f0;
+    border-radius: 18px;
+    background: linear-gradient(115deg, #fff 0%, #f4f6fc 100%);
+    box-shadow: var(--sombra);
+}
+.gestao-hero h1 { margin: .25rem 0 .4rem; }
+.gestao-hero p { margin: 0; color: #64708a; }
+.gestao-eyebrow { color: #52658f; font-size: .7rem; font-weight: 800; letter-spacing: .12em; }
+.gestao-ano-atual {
+    display: grid;
+    justify-items: center;
+    gap: .15rem;
+    min-width: 125px;
+    padding: .75rem 1rem;
+    border: 1px solid #e4e9f2;
+    border-radius: 12px;
+    background: white;
+    color: #667085;
+    font-size: .75rem;
+}
+.gestao-ano-atual strong { color: var(--cor-primaria); font-size: 1.35rem; }
+
+.gestao-grade-periodos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem; align-items: start; }
+.gestao-secao {
+    min-width: 0;
+    padding: clamp(1rem, 2.4vw, 1.5rem);
+    border: 1px solid #e2e7f0;
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: var(--sombra);
+}
+.gestao-secao-larga { width: 100%; }
+.gestao-secao-titulo { display: flex; align-items: center; gap: .85rem; margin-bottom: 1.2rem; }
+.gestao-secao-titulo h2 { margin: 0 0 .18rem; font-size: 1.2rem; }
+.gestao-secao-titulo p { margin: 0; color: #6b7280; font-size: .88rem; }
+.gestao-icone {
+    display: grid;
+    flex: 0 0 40px;
+    width: 40px;
+    height: 40px;
+    place-items: center;
+    border-radius: 12px;
+    background: #edf1fb;
+    color: #253b78;
+    font-size: .8rem;
+    font-weight: 800;
+}
+.gestao-secao-titulo-acoes { flex-wrap: wrap; }
+.gestao-secao-titulo-acoes > div { flex: 1; }
+.gestao-secao-titulo-acoes > .botao { margin-left: auto; }
+
+.gestao-form-grade { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .8rem; align-items: end; }
+.gestao-form-grade .campo { min-width: 0; margin: 0; }
+.gestao-form-grade .botao { min-height: 42px; }
+.ano-novo-form { grid-template-columns: .7fr 1fr 1fr; }
+.ano-novo-form button, .trimestre-novo-form button { grid-column: 1 / -1; justify-self: start; }
+.trimestre-novo-form { grid-template-columns: .9fr 1fr 1fr; }
+.gestao-lista-titulo { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin: 1.35rem 0 .65rem; }
+.gestao-lista-titulo h3 { margin: 0; color: #475467; font-size: .9rem; }
+.gestao-lista-titulo > span, .gestao-contagem { display: inline-grid; min-width: 25px; height: 25px; place-items: center; padding: 0 .4rem; border-radius: 999px; background: #edf1fb; color: #253b78; font-size: .75rem; font-weight: 750; }
+.gestao-lista-registros { display: grid; gap: .6rem; }
+.gestao-registro { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: .6rem; padding: .75rem; border: 1px solid #e8ebf1; border-radius: 11px; background: #fafbfe; }
+.gestao-editar-registro { display: grid; grid-template-columns: minmax(95px, .65fr) minmax(105px, 1fr) minmax(105px, 1fr) auto; align-items: end; gap: .55rem; margin: 0; }
+.gestao-editar-registro label { display: block; min-width: 0; margin: 0; color: #697586; font-size: .72rem; font-weight: 700; }
+.gestao-editar-registro input[type="date"] { display: block; width: 100%; min-width: 0; height: 38px; margin-top: .25rem; padding: .35rem; border: 1px solid #d5dbe6; border-radius: 8px; background: #fff; font: inherit; font-size: .78rem; }
+.gestao-registro-nome { align-self: center; color: #1f315f; font-size: .92rem; }
+.gestao-editar-registro .botao, .gestao-apagar-registro .botao { padding: .48rem .7rem; font-size: .8rem; white-space: nowrap; }
+.gestao-apagar-registro { margin: 0; }
+.gestao-vazio { margin: .5rem 0 0; padding: .9rem; border-radius: 10px; background: #f7f8fb; color: #717b8e; font-size: .88rem; }
+
+.gestao-turmas .gestao-secao-titulo { margin-bottom: 1rem; }
+.turma-nova-form { grid-template-columns: 1.4fr 1fr 1fr auto; margin-bottom: 1.1rem; padding: 1rem; border: 1px solid #e8ebf1; border-radius: 12px; background: #fafbfe; }
+.turma-nova-form button { align-self: end; white-space: nowrap; }
+.gestao-tabela-wrap { border-radius: 12px; }
+.gestao-tabela { min-width: 800px; }
+.gestao-tabela th { font-size: .78rem; }
+.gestao-codigo-turma { display: inline-block; padding: .25rem .55rem; border-radius: 7px; background: #edf1fb; color: #253b78; font-weight: 750; }
+.gestao-editar-turma { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; margin: 0; }
+.gestao-editar-turma select { min-height: 36px; max-width: 175px; padding: .35rem .5rem; border: 1px solid #d5dbe6; border-radius: 8px; background: #fff; font: inherit; font-size: .8rem; }
+.gestao-editar-turma .botao { min-height: 36px; padding: .4rem .65rem; font-size: .8rem; }
+.gestao-tabela td form { margin: 0; }
+.gestao-tabela td:last-child { white-space: nowrap; }
+.gestao-tabela button:disabled { cursor: default; opacity: .7; }
+
+.gestao-grade-datas { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(240px, .8fr); gap: 1rem; align-items: start; }
+.gestao-form-datas, .gestao-copiar-datas { min-width: 0; padding: 1rem; border: 1px solid #e8ebf1; border-radius: 12px; background: #fafbfe; }
+.gestao-form-datas h3, .gestao-copiar-datas h3 { margin: 0 0 .8rem; color: #34436a; font-size: 1rem; }
+.gestao-copiar-datas p { margin: -.3rem 0 1rem; color: #717b8e; font-size: .85rem; }
+.gestao-form-datas > .gestao-form-grade { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.gestao-checkbox { display: inline-flex; align-items: center; gap: .5rem; margin: 0 0 .9rem; color: #475467; font-size: .88rem; font-weight: 600; }
+.gestao-checkbox input { width: 17px; height: 17px; accent-color: #1e3a8a; }
+.gestao-lista-datas { display: grid; gap: .55rem; }
+.gestao-data-item { overflow: hidden; border: 1px solid #e4e8ef; border-radius: 11px; background: #fff; }
+.gestao-data-item summary { display: grid; grid-template-columns: auto minmax(115px, auto) minmax(150px, auto) minmax(0, 1fr) auto; align-items: center; gap: .75rem; padding: .8rem 1rem; cursor: pointer; list-style: none; }
+.gestao-data-item summary::-webkit-details-marker { display: none; }
+.gestao-data-item summary::before { content: '+'; color: #53658d; font-size: 1.1rem; font-weight: 700; }
+.gestao-data-item[open] summary::before { content: '−'; }
+.gestao-data-tipo { color: #596579; font-size: .72rem; font-weight: 750; text-transform: capitalize; }
+.gestao-data-item time { color: #667085; font-size: .82rem; white-space: nowrap; }
+.gestao-data-item summary strong { overflow: hidden; color: #25324b; font-size: .9rem; text-overflow: ellipsis; white-space: nowrap; }
+.gestao-detalhe-prompt { color: #53658d; font-size: .75rem; font-weight: 650; }
+.gestao-editar-data { display: grid; gap: .7rem; padding: .9rem 1rem; border-top: 1px solid #edf0f5; background: #fafbfe; }
+.gestao-editar-data .campo { margin: 0; }
+.gestao-excluir-data { margin: 0; padding: 0 1rem 1rem; background: #fafbfe; }
+.gestao-excluir-data .botao { min-height: 36px; padding: .45rem .75rem; font-size: .82rem; }
+.gestao-nota-lista { color: #727d90; font-size: .8rem; }
+
+/* Mantem a marca do cabecalho centrada e sem deformacao. */
+.marca {
+    width: 88px;
+    flex: 0 0 88px;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    line-height: 1;
+}
+.marca-logo {
+    display: block;
+    width: 58px;
+    height: 71px;
+    flex: 0 0 auto;
+    margin: 0 auto;
+    object-fit: contain;
+    object-position: center;
+    transform: none;
+}
+.marca-nome { display: block; width: 100%; text-align: center; }
+
+@media (max-width: 980px) {
+    .gestao-grade-periodos { grid-template-columns: 1fr; }
+    .gestao-grade-datas { grid-template-columns: 1fr; }
+    .gestao-copiar-datas { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; align-items: end; }
+    .gestao-copiar-datas h3, .gestao-copiar-datas p { grid-column: 1 / -1; }
+    .gestao-copiar-datas .campo { margin: 0; }
+}
+
+@media (max-width: 680px) {
+    .gestao-hero { align-items: flex-start; flex-direction: column; }
+    .gestao-ano-atual { justify-items: start; width: 100%; }
+    .gestao-ano-atual strong { font-size: 1.05rem; }
+    .ano-novo-form, .trimestre-novo-form { grid-template-columns: 1fr 1fr; }
+    .ano-novo-form .campo:first-child, .trimestre-novo-form .campo:first-child { grid-column: 1 / -1; }
+    .gestao-registro { grid-template-columns: 1fr; }
+    .gestao-editar-registro { grid-template-columns: 1fr 1fr; }
+    .gestao-registro-nome { grid-column: 1 / -1; }
+    .gestao-editar-registro .botao { grid-column: 1 / -1; justify-self: start; }
+    .gestao-apagar-registro { justify-self: start; }
+    .turma-nova-form { grid-template-columns: 1fr 1fr; }
+    .turma-nova-form .campo:first-of-type { grid-column: 1 / -1; }
+    .gestao-secao-titulo-acoes > .botao { margin-left: 0; }
+    .gestao-data-item summary { grid-template-columns: auto minmax(0, 1fr) auto; gap: .5rem; }
+    .gestao-data-item summary::before { grid-row: span 2; }
+    .gestao-data-tipo { grid-column: 2; }
+    .gestao-data-item time { grid-column: 2; grid-row: 2; }
+    .gestao-data-item summary strong { grid-column: 2; grid-row: 3; }
+    .gestao-detalhe-prompt { grid-column: 3; grid-row: 1 / 4; }
+    .gestao-copiar-datas { grid-template-columns: 1fr; }
+    .gestao-copiar-datas h3, .gestao-copiar-datas p { grid-column: auto; }
+    .marca { width: 66px; flex-basis: 66px; }
+    .marca-logo { width: 42px; height: 51px; }
+}
