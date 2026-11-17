@@ -18,7 +18,7 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 -- -------------------------------------------------------------------------
 DO $$
 BEGIN
-    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'perfil_usuario') THEN
+    IF to_regtype('perfil_usuario') IS NULL THEN
         CREATE TYPE perfil_usuario AS ENUM ('ALUNO', 'PROFESSOR', 'COORDENACAO', 'DIRECAO');
     END IF;
 END$$;
@@ -39,6 +39,10 @@ CREATE TABLE IF NOT EXISTS usuarios (
     codigo_ativacao_hash VARCHAR(64),       -- hash do codigo de primeiro acesso (nunca o codigo em si)
     codigo_expira_em     TIMESTAMP,         -- validade do codigo
     tentativas_ativacao  INTEGER NOT NULL DEFAULT 0, -- erros de codigo; ao atingir o limite o codigo e bloqueado
+    deve_trocar_senha BOOLEAN NOT NULL DEFAULT FALSE,
+    senha_alterada_em TIMESTAMP,
+    tentativas_login INTEGER NOT NULL DEFAULT 0,
+    bloqueado_ate TIMESTAMP,
     criado_em    TIMESTAMP         NOT NULL DEFAULT NOW()
 );
 
@@ -147,35 +151,6 @@ CREATE INDEX IF NOT EXISTS idx_inscricoes_evento    ON inscricoes (evento_id);
 CREATE INDEX IF NOT EXISTS idx_inscricoes_usuario   ON inscricoes (usuario_id);
 CREATE INDEX IF NOT EXISTS idx_equipe_membros_eq    ON equipe_membros (equipe_id);
 
--- =========================================================================
--- DADOS INICIAIS (SEED) - opcional, util para testar o sistema
--- Senha de todos os usuarios abaixo: "123456" (ja em hash bcrypt)
--- Hash gerado com bcrypt, 10 salt rounds, para a senha "123456"
--- =========================================================================
-INSERT INTO usuarios (nome, email, matricula, senha, perfil, curso, turma)
-VALUES
- ('Admin Direcao', 'direcao@cimol.edu.br', '0001', '$2b$10$YDJjJ6dMKDPuXIgAwenkFOMSUj3.Xwn2ZDb2gsu/xaje4xPsmONGq', 'DIRECAO', NULL, NULL),
- ('Coordenador Geral', 'coordenacao@cimol.edu.br', '0002', '$2b$10$YDJjJ6dMKDPuXIgAwenkFOMSUj3.Xwn2ZDb2gsu/xaje4xPsmONGq', 'COORDENACAO', NULL, NULL),
- ('Professor Exemplo', 'professor@cimol.edu.br', '0003', '$2b$10$YDJjJ6dMKDPuXIgAwenkFOMSUj3.Xwn2ZDb2gsu/xaje4xPsmONGq', 'PROFESSOR', 'Tecnico em Informatica', NULL),
- ('Aluno Exemplo', 'aluno@cimol.edu.br', '2024001', '$2b$10$YDJjJ6dMKDPuXIgAwenkFOMSUj3.Xwn2ZDb2gsu/xaje4xPsmONGq', 'ALUNO', 'Tecnico em Informatica', '3A')
-ON CONFLICT (matricula) DO NOTHING;
-
-INSERT INTO matriculas_autorizadas (matricula, nome) VALUES
-    ('5000184', 'Raissa de Oliveira Lahm'),
-    ('6735227', 'Sofia Rodrigues Santos'),
-    ('6704944', 'Rafael Bazotti'),
-    ('5081504', 'Nicolas Cavallari')
-ON CONFLICT (matricula) DO NOTHING;
-
-INSERT INTO usuarios (nome, email, matricula, senha, perfil)
-VALUES
-    ('Raissa de Oliveira Lahm', 'raissa.lahm@example.invalid', '5000184', NULL, 'ALUNO'),
-    ('Sofia Rodrigues Santos', 'sofia.santos@example.invalid', '6735227', NULL, 'ALUNO'),
-    ('Rafael Bazotti', 'rafael.bazotti@example.invalid', '6704944', NULL, 'ALUNO'),
-    ('Nicolas Cavallari', 'nicolas.cavallari@example.invalid', '5081504', NULL, 'ALUNO')
-ON CONFLICT (matricula) DO NOTHING;
-
-
 CREATE TABLE horarios (
   id SERIAL PRIMARY KEY,
   curso VARCHAR(100) UNIQUE NOT NULL,
@@ -194,3 +169,14 @@ INSERT INTO horarios (curso) VALUES
   ('Informática'),
   ('Química'),
   ('Meio Ambiente');
+
+CREATE TABLE IF NOT EXISTS log_auditoria (
+    id SERIAL PRIMARY KEY,
+    usuario_id INTEGER REFERENCES usuarios(id) ON DELETE SET NULL,
+    alvo_id INTEGER REFERENCES usuarios(id) ON DELETE SET NULL,
+    acao VARCHAR(60) NOT NULL,
+    detalhe TEXT,
+    ip VARCHAR(60),
+    criado_em TIMESTAMP NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_log_auditoria_criado ON log_auditoria (criado_em);

@@ -8,6 +8,7 @@ require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const methodOverride = require('method-override');
+const helmet = require('helmet');
 
 const sessionConfig = require('./config/session');
 const errorMiddleware = require('./middlewares/errorMiddleware');
@@ -24,6 +25,8 @@ const adminRoutes = require('./routes/adminRoutes');
 const horarioRoutes = require('./routes/horarioRoutes');
 
 const app = express();
+
+app.use(helmet({ contentSecurityPolicy: false }));
 
 app.set('trust proxy', 1);
 

@@ -20,6 +20,8 @@ function somentePerfis(...perfisPermitidos) {
             return res.redirect('/login');
         }
 
+        if (usuario.deveTrocarSenha) return res.redirect('/trocar-senha');
+
         if (!perfisPermitidos.includes(usuario.perfil)) {
             // Usuario esta logado, mas nao tem permissao para essa acao
             return res.status(403).render('error', {

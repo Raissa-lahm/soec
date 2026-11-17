@@ -15,7 +15,8 @@ const ALFABETO = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const TAMANHO_CODIGO = 8;
 
 // Quantos dias o codigo vale e quantos erros sao tolerados antes de bloquear
-const VALIDADE_DIAS = 30;
+const VALIDADE_HORAS = 48;
+const VALIDADE_DIAS = 2;
 const MAX_TENTATIVAS = 5;
 
 // Gera um codigo aleatorio seguro (crypto.randomInt, nao Math.random)
@@ -57,6 +58,7 @@ function conferirCodigo(codigo, matricula, hashSalvo) {
 
 module.exports = {
     VALIDADE_DIAS,
+    VALIDADE_HORAS,
     MAX_TENTATIVAS,
     gerarCodigo,
     formatarCodigo,

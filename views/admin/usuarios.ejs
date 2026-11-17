@@ -1,64 +1,16 @@
 <% var titulo = 'Gerenciar usuários' %>
 <%- include('../partials/header') %>
-
-<div class="titulo-pagina">
-    <h1>Usuários</h1>
-    <div class="acoes">
-        <a href="/admin/usuarios/novo/form" class="botao botao-primario">+ Novo usuário</a>
-    </div>
-</div>
-
-<% if (typeof erro !== 'undefined' && erro) { %>
-    <div class="alerta alerta-erro"><%= erro %></div>
-<% } %>
-
-                            <form class="barra-filtros" method="GET" action="/admin/usuarios">
-    <div class="campo">
-        <label for="perfil">Filtrar por perfil</label>
-        <select id="perfil" name="perfil" onchange="this.form.submit()">
-            <option value="">Todos</option>
-            <option value="ALUNO" <%= filtroPerfil === 'ALUNO' ? 'selected' : '' %>>Aluno</option>
-            <option value="PROFESSOR" <%= filtroPerfil === 'PROFESSOR' ? 'selected' : '' %>>Professor</option>
-            <option value="COORDENACAO" <%= filtroPerfil === 'COORDENACAO' ? 'selected' : '' %>>Coordenação</option>
-            <option value="DIRECAO" <%= filtroPerfil === 'DIRECAO' ? 'selected' : '' %>>Direção</option>
-        </select>
-    </div>
-</form>
-
-<div class="tabela-wrapper">
-    <table>
-        <thead>
-            <tr>
-                <th>Nome</th>
-                <th>Matrícula</th>
-                <th>Email</th>
-                <th>Perfil</th>
-                <th>Curso/Turma</th>
-                <th>Conta</th>
-                <th>Ações</th>
-            </tr>
-        </thead>
-        <tbody>
-            <% usuarios.forEach(u => { %>
-                <tr>
-                    <td><%= u.nome %></td>
-                    <td><%= u.matricula %></td>
-                    <td><%= u.email %></td>
-                    <td><span class="tag"><%= u.perfil %></span></td>
-                    <td><%= u.curso || '-' %> <%= u.turma ? '/ ' + u.turma : '' %></td>
-                    <td><span class="tag <%= u.pendente ? 'tag-dourada' : '' %>"><%= u.pendente ? 'Aguardando primeiro acesso' : 'Ativa' %></span></td>
-                    <td>
-                        <div class="acoes">
-                            <a href="/admin/usuarios/<%= u.id %>/editar" class="botao botao-secundario">Editar</a>
-                            <form class="form-confirmar-exclusao" data-mensagem="Excluir o usuário <%= u.nome %>?" action="/admin/usuarios/<%= u.id %>?_method=DELETE" method="POST">
-                                <button type="submit" class="botao botao-perigo">Excluir</button>
-                            </form>
-                        </div>
-                    </td>
-                </tr>
-            <% }) %>
-        </tbody>
-    </table>
-</div>
-
+<div class="titulo-pagina"><h1>Usuários</h1><div class="acoes">
+<a href="/admin/usuarios/novo/form" class="botao botao-primario">+ Novo usuário</a>
+<a href="/admin/usuarios/importar" class="botao botao-secundario">Importar</a></div></div>
+<% if (typeof erro !== 'undefined' && erro) { %><div class="alerta alerta-erro"><%= erro %></div><% } %>
+<form class="barra-filtros" method="GET" action="/admin/usuarios"><div class="campo"><label for="perfil">Filtrar por perfil</label>
+<select id="perfil" name="perfil" onchange="this.form.submit()"><option value="">Todos</option><% perfis.forEach(p => { %><option value="<%= p %>" <%= filtroPerfil===p?'selected':'' %>><%= p %></option><% }) %></select></div></form>
+<div class="tabela-wrapper"><table><thead><tr><th>Nome</th><th>Matrícula</th><th>Email</th><th>Perfil</th><th>Curso/Turma</th><th>Conta</th><th>Ações</th></tr></thead><tbody>
+<% usuarios.forEach(u => { %><tr><td><%= u.nome %></td><td><%= u.matricula %></td><td><%= u.email %></td><td><span class="tag"><%= u.perfil %></span></td><td><%= u.curso||'-' %> <%= u.turma?' / '+u.turma:'' %></td>
+<td><span class="tag <%= (u.pendente||u.deve_trocar_senha)?'tag-dourada':'' %>"><%= u.pendente?'Pendente de ativação':(u.deve_trocar_senha?'Troca de senha obrigatória':'Ativo') %></span></td><td><div class="acoes">
+<a href="/admin/usuarios/<%= u.id %>/editar" class="botao botao-secundario">Editar</a>
+<% if(u.id !== usuarioLogado.id){ %><form action="/admin/usuarios/<%= u.id %>/redefinir-acesso" method="POST"><button class="botao botao-secundario" type="submit">Redefinir acesso</button></form>
+<form class="form-confirmar-exclusao" data-mensagem="Excluir o usuário <%= u.nome %>?" action="/admin/usuarios/<%= u.id %>?_method=DELETE" method="POST"><button type="submit" class="botao botao-perigo">Excluir</button></form><% } %>
+</div></td></tr><% }) %></tbody></table></div>
 <%- include('../partials/footer') %>

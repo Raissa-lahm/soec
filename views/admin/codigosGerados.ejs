@@ -7,6 +7,10 @@
     Se alguém perder o código, gere outro na lista de usuários.
 </div>
 
+<% if (quantidadeCriados > 0) { %>
+    <p><strong><%= quantidadeCriados %></strong> conta(s) criada(s).</p>
+<% } %>
+
 <% if (criados.length > 0) { %>
     <div class="acoes" style="margin-bottom:1rem;">
         <a href="#" id="baixar-codigos" class="botao botao-primario" data-csv="<%= csv %>">Baixar CSV</a>
@@ -29,8 +33,10 @@
             </tbody>
         </table>
     </div>
+<% } else if (quantidadeCriados === 0) { %>
+    <p>Nenhuma conta foi criada.</p>
 <% } else { %>
-    <p>Nenhum usuário foi criado.</p>
+    <p>Nenhuma conta de equipe precisou de código de ativação.</p>
 <% } %>
 
 <% if (ignorados.length > 0) { %>

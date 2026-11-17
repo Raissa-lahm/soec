@@ -14,16 +14,13 @@ const { Pool } = require('pg');
 
 // Cria o pool usando os dados definidos no .env
 const pool = new Pool({
-    host: process.env.DB_HOST,
-    port: process.env.DB_PORT,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-    // PostgreSQL local normalmente nao usa SSL. Para provedores em nuvem,
-    // defina DB_SSL=true no .env para habilita-lo.
-    ssl: {
-        rejectUnauthorized: false
-    }
+    connectionString: process.env.DATABASE_URL || undefined,
+    host: process.env.DATABASE_URL ? undefined : process.env.DB_HOST,
+    port: process.env.DATABASE_URL ? undefined : process.env.DB_PORT,
+    user: process.env.DATABASE_URL ? undefined : process.env.DB_USER,
+    password: process.env.DATABASE_URL ? undefined : process.env.DB_PASSWORD,
+    database: process.env.DATABASE_URL ? undefined : process.env.DB_NAME,
+    ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : undefined
 });
 
 // Testa a conexao assim que o servidor sobe

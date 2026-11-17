@@ -10,6 +10,10 @@ module.exports = function autenticado(req, res, next) {
         // Deixa o usuario logado disponivel em todas as views automaticamente,
         // assim nao precisamos passar "usuario" manualmente em cada res.render
         res.locals.usuarioLogado = req.session.usuario;
+        if (req.session.usuario.deveTrocarSenha &&
+            !['/trocar-senha', '/logout'].includes(req.path)) {
+            return res.redirect('/trocar-senha');
+        }
         return next();
     }
 

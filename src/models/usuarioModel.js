@@ -1,166 +1,101 @@
-// =========================================================================
-// models/usuarioModel.js
-// Camada de acesso a dados da tabela "usuarios".
-// Todas as consultas usam parametros ($1, $2...) para evitar SQL Injection.
-// =========================================================================
-
 const pool = require('../config/database');
 
+const COLUNAS = `id, nome, email, matricula, perfil, curso, turma, criado_em,
+    senha IS NULL AS pendente, deve_trocar_senha`;
+
 const UsuarioModel = {
-
-    // Busca um usuario pela matricula (usado no login)
     async buscarPorMatricula(matricula) {
-        const resultado = await pool.query(
-            'SELECT * FROM usuarios WHERE matricula = $1',
-            [matricula]
-        );
-        return resultado.rows[0];
+        const r = await pool.query('SELECT * FROM usuarios WHERE matricula = $1', [matricula]);
+        return r.rows[0];
     },
-
-    // Busca um usuario pelo email (usado para validar duplicidade no cadastro)
+    async registrarFalhaLogin(id) {
+        await pool.query(`UPDATE usuarios SET tentativas_login=tentativas_login+1,
+            bloqueado_ate=CASE WHEN tentativas_login+1 >= 5 THEN NOW()+INTERVAL '15 minutes' ELSE bloqueado_ate END
+            WHERE id=$1`, [id]);
+    },
+    async limparFalhasLogin(id) {
+        await pool.query('UPDATE usuarios SET tentativas_login=0,bloqueado_ate=NULL WHERE id=$1', [id]);
+    },
     async buscarPorEmail(email) {
-        const resultado = await pool.query(
-            'SELECT * FROM usuarios WHERE email = $1',
-            [email]
-        );
-        return resultado.rows[0];
+        const r = await pool.query('SELECT * FROM usuarios WHERE LOWER(email) = LOWER($1)', [email]);
+        return r.rows[0];
     },
-
-    // Busca um usuario pelo ID
     async buscarPorId(id) {
-        const resultado = await pool.query(
-            'SELECT id, nome, email, matricula, perfil, curso, turma, criado_em, (senha IS NULL) AS pendente FROM usuarios WHERE id = $1',
-            [id]
-        );
-        return resultado.rows[0];
+        const r = await pool.query(`SELECT ${COLUNAS} FROM usuarios WHERE id = $1`, [id]);
+        return r.rows[0];
     },
-
-    // Lista todos os usuarios (usado na area administrativa), com filtro opcional de perfil
     async listarTodos(perfil) {
-        if (perfil) {
-            const resultado = await pool.query(
-                'SELECT id, nome, email, matricula, perfil, curso, turma, criado_em, (senha IS NULL) AS pendente FROM usuarios WHERE perfil = $1 ORDER BY nome ASC',
-                [perfil]
-            );
-            return resultado.rows;
-        }
-        const resultado = await pool.query(
-            'SELECT id, nome, email, matricula, perfil, curso, turma, criado_em, (senha IS NULL) AS pendente FROM usuarios ORDER BY nome ASC'
-        );
-        return resultado.rows;
+        const r = perfil
+            ? await pool.query(`SELECT ${COLUNAS} FROM usuarios WHERE perfil = $1 ORDER BY nome`, [perfil])
+            : await pool.query(`SELECT ${COLUNAS} FROM usuarios ORDER BY nome`);
+        return r.rows;
     },
-
-    // Cria um novo usuario (senha ja deve chegar com hash bcrypt aplicado)
-    async criar({ nome, email, matricula, senhaHash, perfil, curso, turma }) {
-        const resultado = await pool.query(
-            `INSERT INTO usuarios (nome, email, matricula, senha, perfil, curso, turma)
-             VALUES ($1, $2, $3, $4, $5, $6, $7)
-             RETURNING id, nome, email, matricula, perfil, curso, turma`,
-            [nome, email, matricula, senhaHash, perfil, curso || null, turma || null]
+    async criar({ nome, email, matricula, senhaHash = null, perfil, curso, turma, deveTrocarSenha = false }) {
+        const r = await pool.query(
+            `INSERT INTO usuarios (nome,email,matricula,senha,perfil,curso,turma,deve_trocar_senha)
+             VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+             RETURNING id,nome,email,matricula,perfil,curso,turma,deve_trocar_senha`,
+            [nome, email, matricula, senhaHash, perfil, curso || null, turma || null, deveTrocarSenha]
         );
-        return resultado.rows[0];
+        return r.rows[0];
     },
-
-    // Atualiza os dados de um usuario (sem alterar a senha)
+    async criarPendente({ nome, email, matricula, perfil, curso, turma, codigoHash, validadeHoras = 48 }) {
+        const r = await pool.query(
+            `INSERT INTO usuarios (nome,email,matricula,senha,perfil,curso,turma,codigo_ativacao_hash,codigo_expira_em,tentativas_ativacao,deve_trocar_senha)
+             VALUES ($1,$2,$3,NULL,$4,$5,$6,$7,NOW()+make_interval(hours => $8),0,FALSE)
+             RETURNING id,nome,email,matricula,perfil`,
+            [nome,email,matricula,perfil,curso || null,turma || null,codigoHash,validadeHoras]
+        );
+        return r.rows[0];
+    },
     async atualizar(id, { nome, email, matricula, perfil, curso, turma }) {
-        const resultado = await pool.query(
-            `UPDATE usuarios
-             SET nome = $1, email = $2, matricula = $3, perfil = $4, curso = $5, turma = $6
-             WHERE id = $7
-             RETURNING id, nome, email, matricula, perfil, curso, turma`,
-            [nome, email, matricula, perfil, curso || null, turma || null, id]
+        const r = await pool.query(
+            `UPDATE usuarios SET nome=$1,email=$2,matricula=$3,perfil=$4,curso=$5,turma=$6 WHERE id=$7 RETURNING ${COLUNAS}`,
+            [nome,email,matricula,perfil,curso || null,turma || null,id]
         );
-        return resultado.rows[0];
+        return r.rows[0];
     },
-
-    // Atualiza somente a senha (novo hash) de um usuario
-    // Tambem limpa o codigo de ativacao: se o admin definiu a senha, o codigo nao serve mais
-    async atualizarSenha(id, senhaHash) {
-        await pool.query(
-            `UPDATE usuarios
-             SET senha = $1, codigo_ativacao_hash = NULL, codigo_expira_em = NULL, tentativas_ativacao = 0
-             WHERE id = $2`,
-            [senhaHash, id]
+    async trocarSenhaObrigatoria(id, senhaHash) {
+        const r = await pool.query(
+            `UPDATE usuarios SET senha=$1,deve_trocar_senha=FALSE,senha_alterada_em=NOW(),
+             codigo_ativacao_hash=NULL,codigo_expira_em=NULL,tentativas_ativacao=0 WHERE id=$2 RETURNING id`,
+            [senhaHash,id]
         );
+        return r.rows[0];
     },
-
-    // ---------------------------------------------------------------
-    // PRIMEIRO ACESSO
-    // Conta "pendente" = senha NULL. Ela existe no banco (foi autorizada
-    // pela escola), mas ninguem definiu a senha ainda.
-    // ---------------------------------------------------------------
-
-    // Cria uma conta pendente (sem senha) ja com o hash do codigo de ativacao.
-    // A validade e calculada no proprio banco (NOW() + dias) para nao depender
-    // do fuso horario do servidor Node.
-    async criarPendente({ nome, email, matricula, perfil, curso, turma, codigoHash, validadeDias }) {
-        const resultado = await pool.query(
-            `INSERT INTO usuarios
-                (nome, email, matricula, senha, perfil, curso, turma,
-                 codigo_ativacao_hash, codigo_expira_em, tentativas_ativacao)
-             VALUES ($1, $2, $3, NULL, $4, $5, $6, $7, NOW() + make_interval(days => $8), 0)
-             RETURNING id, nome, email, matricula, perfil`,
-            [nome, email, matricula, perfil, curso || null, turma || null, codigoHash, validadeDias]
-        );
-        return resultado.rows[0];
-    },
-
-    // A matrícula precisa estar na lista escolar autorizada e corresponder
-    // ao nome pré-cadastrado. Importações administrativas não liberam acesso.
-    async buscarParaAtivacao(matricula, nome) {
-        const resultado = await pool.query(
-            `SELECT u.id, (u.senha IS NULL) AS pendente
-             FROM usuarios u
-             JOIN matriculas_autorizadas a
-               ON a.matricula = u.matricula
-              AND LOWER(BTRIM(a.nome)) = LOWER(BTRIM(u.nome))
-             WHERE u.matricula = $1
-               AND LOWER(BTRIM(a.nome)) = LOWER(BTRIM($2))`,
-            [matricula, nome]
-        );
-        return resultado.rows[0];
-    },
-
-    // Define a senha uma única vez para uma conta autorizada ainda pendente.
     async ativarConta(id, senhaHash) {
-        const resultado = await pool.query(
-            `UPDATE usuarios
-             SET senha = $1
-             WHERE id = $2 AND senha IS NULL
-               AND matricula IN (SELECT matricula FROM matriculas_autorizadas)
-             RETURNING id`,
-            [senhaHash, id]
-        );
-        return resultado.rows[0];
+        const r = await pool.query(
+            `UPDATE usuarios SET senha=$1,deve_trocar_senha=FALSE,senha_alterada_em=NOW(),
+             codigo_ativacao_hash=NULL,codigo_expira_em=NULL,tentativas_ativacao=0
+             WHERE id=$2 AND senha IS NULL AND perfil IN ('PROFESSOR','COORDENACAO','DIRECAO')
+               AND codigo_expirA_em > NOW() AND tentativas_ativacao < 5 RETURNING id`, [senhaHash,id]);
+        return r.rows[0];
     },
-
-    // Gera um novo codigo para a pessoa e apaga a senha atual (usado quando
-    // o codigo foi perdido ou a pessoa esqueceu a senha: ela refaz o primeiro acesso)
-    async redefinirParaPrimeiroAcesso(id, codigoHash, validadeDias) {
-        await pool.query(
-            `UPDATE usuarios
-             SET senha = NULL,
-                 codigo_ativacao_hash = $1,
-                 codigo_expira_em = NOW() + make_interval(days => $2),
-                 tentativas_ativacao = 0
-             WHERE id = $3`,
-            [codigoHash, validadeDias, id]
-        );
+    async buscarParaAtivacao(matricula, email) {
+        const r = await pool.query(
+            `SELECT id,matricula,email,perfil,senha,codigo_ativacao_hash,codigo_expira_em,tentativas_ativacao
+             FROM usuarios WHERE matricula=$1 AND LOWER(email)=LOWER($2)`, [matricula,email]);
+        return r.rows[0];
     },
-
-    // Derruba as sessoes abertas de um usuario (a tabela "session" guarda o
-    // usuario dentro do JSON). Usado quando a senha dele e apagada pela gestao.
+    async registrarFalhaAtivacao(id) {
+        await pool.query(`UPDATE usuarios SET tentativas_ativacao=LEAST(tentativas_ativacao+1,5) WHERE id=$1 AND senha IS NULL`, [id]);
+    },
+    async redefinirAluno(id, senhaHash) {
+        await pool.query(`UPDATE usuarios SET senha=$1,deve_trocar_senha=TRUE,senha_alterada_em=NULL,
+            codigo_ativacao_hash=NULL,codigo_expira_em=NULL,tentativas_ativacao=0 WHERE id=$2 AND perfil='ALUNO'`, [senhaHash,id]);
+    },
+    async redefinirParaPrimeiroAcesso(id, codigoHash, validadeHoras = 48) {
+        await pool.query(`UPDATE usuarios SET senha=NULL,deve_trocar_senha=FALSE,codigo_ativacao_hash=$1,
+            codigo_expira_em=NOW()+make_interval(hours => $2),tentativas_ativacao=0 WHERE id=$3`, [codigoHash,validadeHoras,id]);
+    },
+    async contarDirecoesAtivas() {
+        const r = await pool.query(`SELECT COUNT(*)::int AS total FROM usuarios WHERE perfil='DIRECAO' AND senha IS NOT NULL`);
+        return r.rows[0].total;
+    },
     async encerrarSessoes(id) {
-        await pool.query(
-            "DELETE FROM session WHERE (sess::jsonb -> 'usuario' ->> 'id') = $1",
-            [String(id)]
-        );
+        await pool.query("DELETE FROM session WHERE (sess::jsonb -> 'usuario' ->> 'id') = $1", [String(id)]);
     },
-
-    // Remove um usuario
-    async excluir(id) {
-        await pool.query('DELETE FROM usuarios WHERE id = $1', [id]);
-    }
+    async excluir(id) { await pool.query('DELETE FROM usuarios WHERE id=$1', [id]); }
 };
 
 module.exports = UsuarioModel;

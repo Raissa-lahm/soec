@@ -1,287 +1,158 @@
-// =========================================================================
-// controllers/usuarioController.js
-// CRUD completo de usuarios - area administrativa (COORDENACAO/DIRECAO).
-// =========================================================================
-
 const bcrypt = require('bcrypt');
 const UsuarioModel = require('../models/usuarioModel');
-const {
-    VALIDADE_DIAS,
-    gerarCodigo,
-    formatarCodigo,
-    hashCodigo
-} = require('../utils/ativacao');
+const AuditoriaModel = require('../models/auditoriaModel');
+const { podeGerenciar, perfisGerenciaveis } = require('../utils/permissoes');
+const { VALIDADE_HORAS, gerarCodigo, formatarCodigo, hashCodigo } = require('../utils/ativacao');
 
-const SALT_ROUNDS = 10;
-const PERFIS_VALIDOS = ['ALUNO', 'PROFESSOR', 'COORDENACAO', 'DIRECAO'];
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const SALT_ROUNDS = 10;
 
-// -------------------------------------------------------------------
-// Funcoes auxiliares da importacao (leitura da planilha)
-// -------------------------------------------------------------------
-
-// Tira acentos e espacos: "Coordenação " -> "Coordenacao"
-function semAcento(texto) {
-    return String(texto || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
-}
-
-// Converte o texto da planilha em linhas de campos.
-// Aceita separador ; , ou TAB (copiar e colar do Excel gera TAB) e descobre
-// qual e o separador contando qual aparece mais na primeira linha.
+function semAcento(texto) { return String(texto || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim(); }
 function lerPlanilha(texto) {
-    const linhas = texto.replace(/^\uFEFF/, '').split(/\r?\n/).filter((l) => l.trim() !== '');
-    if (linhas.length === 0) return [];
-
-    const separador = [';', '\t', ','].reduce((melhor, sep) =>
-        linhas[0].split(sep).length > linhas[0].split(melhor).length ? sep : melhor
-    );
-
-    return linhas.map((linha) =>
-        linha.split(separador).map((campo) => campo.trim().replace(/^"|"$/g, '').trim())
-    );
+    const linhas = texto.replace(/^\uFEFF/, '').split(/\r?\n/).filter((l) => l.trim());
+    if (!linhas.length) return [];
+    const sep = [';', '\t', ','].reduce((a,b) => linhas[0].split(b).length > linhas[0].split(a).length ? b : a);
+    return linhas.map(l => l.split(sep).map(c => c.trim().replace(/^"|"$/g, '').trim()));
 }
-
-// Monta o CSV com os codigos, para a coordenacao baixar/imprimir
-function montarCsvCodigos(criados) {
-    const linhas = ['Nome;Matricula;Codigo de ativacao'];
-    criados.forEach((c) => linhas.push(`${c.nome};${c.matricula};${c.codigo}`));
-    return linhas.join('\r\n');
+function montarCsvCodigos(items) {
+    const cell = v => `"${String(v || '').replace(/"/g, '""')}"`;
+    return ['Nome;Matricula;Codigo de ativacao', ...items.map(c => [c.nome,c.matricula,c.codigo].map(cell).join(';'))].join('\r\n');
+}
+function renderCodigos(res, titulo, criados, ignorados = [], quantidadeCriados = criados.length) {
+    return res.render('admin/codigosGerados', { titulo, criados, ignorados, csv: montarCsvCodigos(criados), quantidadeCriados });
 }
 
 const UsuarioController = {
-
-    // GET /admin -> painel administrativo (dashboard simples)
-    async dashboard(req, res, next) {
+    async dashboard(req,res,next) {
         try {
-            const usuarios = await UsuarioModel.listarTodos();
-            const totais = {
-                alunos: usuarios.filter(u => u.perfil === 'ALUNO').length,
-                professores: usuarios.filter(u => u.perfil === 'PROFESSOR').length,
-                coordenacao: usuarios.filter(u => u.perfil === 'COORDENACAO').length,
-                direcao: usuarios.filter(u => u.perfil === 'DIRECAO').length
-            };
-            res.render('admin/dashboard', { totais });
-        } catch (erro) {
-            next(erro);
-        }
+            const u = await UsuarioModel.listarTodos();
+            res.render('admin/dashboard', { totais: { alunos:u.filter(x=>x.perfil==='ALUNO').length, professores:u.filter(x=>x.perfil==='PROFESSOR').length, coordenacao:u.filter(x=>x.perfil==='COORDENACAO').length, direcao:u.filter(x=>x.perfil==='DIRECAO').length } });
+        } catch(e) { next(e); }
     },
-
-    // GET /admin/usuarios -> lista usuarios, com filtro opcional por perfil
-    async listar(req, res, next) {
+    async listar(req,res,next) {
         try {
-            const { perfil } = req.query;
-            const usuarios = await UsuarioModel.listarTodos(perfil);
-            res.render('admin/usuarios', { usuarios, filtroPerfil: perfil || '' });
-        } catch (erro) {
-            next(erro);
-        }
+            const todos = await UsuarioModel.listarTodos();
+            const visiveis = todos.filter(u => podeGerenciar(req.session.usuario.perfil, u.perfil));
+            const perfil = String(req.query.perfil || '');
+            res.render('admin/usuarios', { usuarios: perfil ? visiveis.filter(u=>u.perfil===perfil) : visiveis, filtroPerfil: perfil, perfis: perfisGerenciaveis(req.session.usuario.perfil), perfilLogado: req.session.usuario.perfil });
+        } catch(e) { next(e); }
     },
-
-    exibirFormCriar(req, res) {
-        res.render('admin/usuarioForm', { usuario: null, acao: '/admin/usuarios' });
+    exibirFormCriar(req,res) {
+        res.render('admin/usuarioForm', { usuario:null, acao:'/admin/usuarios', perfis:perfisGerenciaveis(req.session.usuario.perfil) });
     },
-
-    async exibirFormEditar(req, res, next) {
+    async exibirFormEditar(req,res,next) {
         try {
             const usuario = await UsuarioModel.buscarPorId(req.params.id);
-            if (!usuario) return res.redirect('/admin/usuarios');
-            res.render('admin/usuarioForm', { usuario, acao: `/admin/usuarios/${usuario.id}?_method=PUT` });
-        } catch (erro) {
-            next(erro);
-        }
+            if (!usuario || !podeGerenciar(req.session.usuario.perfil, usuario.perfil)) return res.sendStatus(403);
+            res.render('admin/usuarioForm', { usuario, acao:`/admin/usuarios/${usuario.id}?_method=PUT`, perfis:perfisGerenciaveis(req.session.usuario.perfil) });
+        } catch(e) { next(e); }
     },
-
-    // POST /admin/usuarios -> cria um novo usuario (senha inicial obrigatoria)
-    async criar(req, res, next) {
+    async criar(req,res,next) {
         try {
-            const { nome, email, matricula, senha, perfil, curso, turma } = req.body;
-
-            if (!nome || !email || !matricula || !senha || !perfil) {
-                return res.status(400).render('admin/usuarioForm', {
-                    usuario: req.body,
-                    acao: '/admin/usuarios',
-                    erro: 'Preencha todos os campos obrigatorios (nome, email, matricula, senha, perfil).'
-                });
+            const nome=String(req.body.nome||'').trim(), email=String(req.body.email||'').trim().toLowerCase(), matricula=String(req.body.matricula||'').trim();
+            const perfil=String(req.body.perfil||'').toUpperCase(), curso=String(req.body.curso||'').trim(), turma=String(req.body.turma||'').trim();
+            const perfis=perfisGerenciaveis(req.session.usuario.perfil);
+            const renderErro = (erro) => res.status(400).render('admin/usuarioForm',{ usuario:req.body, acao:'/admin/usuarios', perfis, erro });
+            if (!nome || !email || !matricula || !perfis.includes(perfil)) return renderErro('Dados obrigatórios inválidos ou perfil não permitido.');
+            if (!EMAIL_REGEX.test(email)) return renderErro('E-mail inválido.');
+            if (await UsuarioModel.buscarPorEmail(email) || await UsuarioModel.buscarPorMatricula(matricula)) return renderErro('Já existe usuário com este e-mail ou matrícula.');
+            if (perfil === 'ALUNO') {
+                await UsuarioModel.criar({ nome,email,matricula,senhaHash:await bcrypt.hash(matricula,SALT_ROUNDS),perfil,curso,turma,deveTrocarSenha:true });
+                await AuditoriaModel.registrar({ usuarioId:req.session.usuario.id, acao:'CRIAR_USUARIO', detalhe:`Perfil ${perfil}`, ip:req.ip });
+                return res.redirect('/admin/usuarios');
             }
-
-            const emailExistente = await UsuarioModel.buscarPorEmail(email);
-            const matriculaExistente = await UsuarioModel.buscarPorMatricula(matricula);
-            if (emailExistente || matriculaExistente) {
-                return res.status(400).render('admin/usuarioForm', {
-                    usuario: req.body,
-                    acao: '/admin/usuarios',
-                    erro: 'Ja existe um usuario com este email ou matricula.'
-                });
-            }
-
-            const senhaHash = await bcrypt.hash(senha, SALT_ROUNDS);
-            await UsuarioModel.criar({ nome, email, matricula, senhaHash, perfil, curso, turma });
-
-            res.redirect('/admin/usuarios');
-        } catch (erro) {
-            next(erro);
-        }
+            const codigo=gerarCodigo();
+            await UsuarioModel.criarPendente({ nome,email,matricula,perfil,curso,turma,codigoHash:hashCodigo(codigo,matricula),validadeHoras:VALIDADE_HORAS });
+            await AuditoriaModel.registrar({ usuarioId:req.session.usuario.id, acao:'CRIAR_USUARIO', detalhe:`Perfil ${perfil}`, ip:req.ip });
+            return renderCodigos(res,'Código de primeiro acesso', [{nome,matricula,codigo:formatarCodigo(codigo)}]);
+        } catch(e) { next(e); }
     },
-
-    // PUT /admin/usuarios/:id -> atualiza dados cadastrais (sem mexer na senha)
-    async atualizar(req, res, next) {
+    async atualizar(req,res,next) {
         try {
-            const { nome, email, matricula, perfil, curso, turma } = req.body;
-            await UsuarioModel.atualizar(req.params.id, { nome, email, matricula, perfil, curso, turma });
-
-            // Se uma nova senha foi informada no formulario, atualiza tambem
-            if (req.body.senha && req.body.senha.trim().length > 0) {
-                const senhaHash = await bcrypt.hash(req.body.senha, SALT_ROUNDS);
-                await UsuarioModel.atualizarSenha(req.params.id, senhaHash);
-            }
-
-            res.redirect('/admin/usuarios');
-        } catch (erro) {
-            next(erro);
-        }
-    },
-
-    // GET /admin/usuarios/importar -> tela de importacao em massa
-    exibirImportacao(req, res) {
-        res.render('admin/importarUsuarios', { erro: null });
-    },
-
-    // POST /admin/usuarios/importar -> cadastra varias pessoas de uma vez.
-    // Cada pessoa vira uma conta PENDENTE (sem senha) com um codigo de
-    // ativacao. O codigo aparece UMA unica vez na tela de resultado: no
-    // banco fica so o hash dele.
-    async importar(req, res, next) {
-        try {
-            // Aceita arquivo CSV enviado OU texto colado na caixa
-            let texto = req.body.dados || '';
-            if (req.file) {
-                texto = req.file.buffer.toString('utf8');
-                // CSV salvo pelo Excel costuma vir em Windows-1252: se os acentos
-                // quebraram (caractere \uFFFD), le de novo como latin1
-                if (texto.includes('\uFFFD')) texto = req.file.buffer.toString('latin1');
-            }
-
-            let linhas = lerPlanilha(texto);
-            if (linhas.length === 0) {
-                return res.status(400).render('admin/importarUsuarios', {
-                    erro: 'Envie um arquivo CSV ou cole os dados da planilha.'
-                });
-            }
-
-            // Se a primeira linha for cabecalho (comeca com "nome"), descarta
-            if (semAcento(linhas[0][0]).toLowerCase() === 'nome') linhas = linhas.slice(1);
-
-            const criados = [];
-            const ignorados = [];
-            const matriculasVistas = new Set();
-            const emailsVistos = new Set();
-
-            // Colunas esperadas: nome ; matricula ; email ; perfil ; curso ; turma
-            for (const [indice, campos] of linhas.entries()) {
-                const [nome, matricula, email, perfilBruto, curso, turma] = campos;
-                const rotulo = nome || matricula || `linha ${indice + 1}`;
-                const perfil = semAcento(perfilBruto).toUpperCase() || 'ALUNO';
-
-                let motivo = null;
-                if (!nome || !matricula || !email) {
-                    motivo = 'Faltam dados obrigatórios (nome, matrícula e email).';
-                } else if (!EMAIL_REGEX.test(email)) {
-                    motivo = 'Email inválido.';
-                } else if (!PERFIS_VALIDOS.includes(perfil)) {
-                    motivo = `Perfil inválido (use ${PERFIS_VALIDOS.join(', ')}).`;
-                } else if (matriculasVistas.has(matricula) || emailsVistos.has(email.toLowerCase())) {
-                    motivo = 'Matrícula ou email repetido dentro da própria planilha.';
-                } else if (await UsuarioModel.buscarPorMatricula(matricula)
-                        || await UsuarioModel.buscarPorEmail(email)) {
-                    // Nunca sobrescreve quem ja esta cadastrado
-                    motivo = 'Já existe usuário com esta matrícula ou email.';
-                }
-
-                if (motivo) {
-                    ignorados.push({ nome: rotulo, matricula: matricula || '-', motivo });
-                    continue;
-                }
-
-                matriculasVistas.add(matricula);
-                emailsVistos.add(email.toLowerCase());
-
+            const existente=await UsuarioModel.buscarPorId(req.params.id);
+            if (!existente || !podeGerenciar(req.session.usuario.perfil,existente.perfil)) return res.sendStatus(403);
+            const perfil=String(req.body.perfil||'').toUpperCase();
+            const perfis=perfisGerenciaveis(req.session.usuario.perfil);
+            if (!perfis.includes(perfil)) return res.status(403).send('Perfil não permitido.');
+            if (existente.perfil==='DIRECAO' && perfil!=='DIRECAO' && await UsuarioModel.contarDirecoesAtivas() <= 1) return res.status(400).send('Não é possível rebaixar a última Direção ativa.');
+            await UsuarioModel.atualizar(req.params.id,{nome:String(req.body.nome||'').trim(),email:String(req.body.email||'').trim().toLowerCase(),matricula:String(req.body.matricula||'').trim(),perfil,curso:req.body.curso,turma:req.body.turma});
+            await AuditoriaModel.registrar({ usuarioId:req.session.usuario.id, alvoId:Number(req.params.id), acao:'EDITAR_USUARIO', detalhe:`Perfil ${perfil}`, ip:req.ip });
+            if (existente.perfil !== perfil && perfil === 'ALUNO') {
+                await UsuarioModel.redefinirAluno(req.params.id, await bcrypt.hash(String(req.body.matricula).trim(), SALT_ROUNDS));
+                await UsuarioModel.encerrarSessoes(req.params.id);
+            } else if (existente.perfil !== perfil && perfil !== 'ALUNO') {
                 const codigo = gerarCodigo();
-                await UsuarioModel.criarPendente({
-                    nome, email, matricula, perfil, curso, turma,
-                    codigoHash: hashCodigo(codigo, matricula),
-                    validadeDias: VALIDADE_DIAS
-                });
-                criados.push({ nome, matricula, codigo: formatarCodigo(codigo) });
+                await UsuarioModel.redefinirParaPrimeiroAcesso(req.params.id, hashCodigo(codigo, String(req.body.matricula).trim()), VALIDADE_HORAS);
+                await UsuarioModel.encerrarSessoes(req.params.id);
+                return renderCodigos(res, 'Código de primeiro acesso', [{nome:String(req.body.nome).trim(),matricula:String(req.body.matricula).trim(),codigo:formatarCodigo(codigo)}]);
+            } else if (existente.perfil !== perfil) {
+                await UsuarioModel.encerrarSessoes(req.params.id);
             }
-
-            res.render('admin/codigosGerados', {
-                titulo: 'Resultado da importação',
-                criados,
-                ignorados,
-                csv: montarCsvCodigos(criados)
-            });
-        } catch (erro) {
-            next(erro);
-        }
+            return res.redirect('/admin/usuarios');
+        } catch(e) { next(e); }
     },
-
-    // POST /admin/usuarios/:id/codigo -> gera um NOVO codigo de ativacao.
-    // Serve para codigo perdido/expirado/bloqueado e tambem para "esqueci a
-    // senha": a senha atual e apagada e a pessoa refaz o primeiro acesso.
-    async gerarNovoCodigo(req, res, next) {
+    exibirImportacao(req,res) { res.render('admin/importarUsuarios',{erro:null,perfis:perfisGerenciaveis(req.session.usuario.perfil)}); },
+    async importar(req,res,next) {
         try {
-            const id = parseInt(req.params.id, 10);
-
-            // Mesma protecao do excluir: a gestao nao pode se trancar para fora
-            if (id === req.session.usuario.id) {
-                const usuarios = await UsuarioModel.listarTodos();
-                return res.status(400).render('admin/usuarios', {
-                    usuarios,
-                    filtroPerfil: '',
-                    erro: 'Você não pode gerar novo código para o próprio usuário enquanto estiver logado com ele.'
-                });
+            let texto=req.body.dados||'';
+            if(req.file) { texto=req.file.buffer.toString('utf8'); if(texto.includes('\uFFFD')) texto=req.file.buffer.toString('latin1'); }
+            let linhas=lerPlanilha(texto);
+            if(linhas.length && semAcento(linhas[0][0]).toLowerCase()==='nome') linhas=linhas.slice(1);
+            const podeCriar=perfisGerenciaveis(req.session.usuario.perfil), criados=[], ignorados=[], vistosM=new Set(), vistosE=new Set();
+            let quantidadeCriados = 0;
+            for(const [i,c] of linhas.entries()) {
+                const [nome,m0,e0,p0,curso,turma]=c; const matricula=String(m0||'').trim(),email=String(e0||'').trim().toLowerCase();
+                const perfil=semAcento(p0||'ALUNO').toUpperCase(); let motivo=null;
+                if(!nome||!matricula||!email) motivo='Faltam nome, matrícula ou e-mail.';
+                else if(!EMAIL_REGEX.test(email)) motivo='E-mail inválido.';
+                else if(!podeCriar.includes(perfil)) motivo=`Perfil ${perfil} não permitido para seu usuário.`;
+                else if(vistosM.has(matricula)||vistosE.has(email)) motivo='Matrícula ou e-mail repetido na planilha.';
+                else if(await UsuarioModel.buscarPorMatricula(matricula)||await UsuarioModel.buscarPorEmail(email)) motivo='Já existe usuário com esta matrícula ou e-mail.';
+                if(motivo) { ignorados.push({nome:nome||`linha ${i+1}`,matricula:matricula||'-',motivo}); continue; }
+                vistosM.add(matricula); vistosE.add(email);
+                if(perfil==='ALUNO') {
+                    await UsuarioModel.criar({nome,email,matricula,senhaHash:await bcrypt.hash(matricula,SALT_ROUNDS),perfil,curso,turma,deveTrocarSenha:true});
+                    await AuditoriaModel.registrar({ usuarioId:req.session.usuario.id, acao:'CRIAR_USUARIO', detalhe:`Perfil ${perfil}`, ip:req.ip });
+                    quantidadeCriados += 1;
+                } else {
+                    const codigo=gerarCodigo();
+                    await UsuarioModel.criarPendente({nome,email,matricula,perfil,curso,turma,codigoHash:hashCodigo(codigo,matricula),validadeHoras:VALIDADE_HORAS});
+                    await AuditoriaModel.registrar({ usuarioId:req.session.usuario.id, acao:'CRIAR_USUARIO', detalhe:`Perfil ${perfil}`, ip:req.ip });
+                    criados.push({nome,matricula,codigo:formatarCodigo(codigo)});
+                    quantidadeCriados += 1;
+                }
             }
-
-            const usuario = await UsuarioModel.buscarPorId(id);
-            if (!usuario) return res.redirect('/admin/usuarios');
-
-            const codigo = gerarCodigo();
-            await UsuarioModel.redefinirParaPrimeiroAcesso(
-                id, hashCodigo(codigo, usuario.matricula), VALIDADE_DIAS
-            );
-            // Se a pessoa estava logada em algum aparelho, derruba a sessao
+            return renderCodigos(res,'Resultado da importação',criados,ignorados,quantidadeCriados);
+        } catch(e) { next(e); }
+    },
+    async redefinirAcesso(req,res,next) {
+        try {
+            const id=Number(req.params.id), logado=req.session.usuario;
+            if(id===logado.id) return res.status(400).send('Não é possível redefinir o próprio acesso enquanto estiver logado.');
+            const alvo=await UsuarioModel.buscarPorId(id);
+            if(!alvo||!podeGerenciar(logado.perfil,alvo.perfil)) return res.sendStatus(403);
+            if(alvo.perfil==='ALUNO') {
+                await UsuarioModel.redefinirAluno(id,await bcrypt.hash(alvo.matricula,SALT_ROUNDS));
+                await UsuarioModel.encerrarSessoes(id);
+                await AuditoriaModel.registrar({ usuarioId:logado.id, alvoId:id, acao:'REDEFINIR_SENHA', detalhe:'Primeiro acesso de aluno', ip:req.ip });
+                return res.redirect('/admin/usuarios');
+            }
+            const codigo=gerarCodigo();
+            await UsuarioModel.redefinirParaPrimeiroAcesso(id,hashCodigo(codigo,alvo.matricula),VALIDADE_HORAS);
             await UsuarioModel.encerrarSessoes(id);
-
-            const criados = [{ nome: usuario.nome, matricula: usuario.matricula, codigo: formatarCodigo(codigo) }];
-            res.render('admin/codigosGerados', {
-                titulo: 'Novo código de ativação',
-                criados,
-                ignorados: [],
-                csv: montarCsvCodigos(criados)
-            });
-        } catch (erro) {
-            next(erro);
-        }
+            await AuditoriaModel.registrar({ usuarioId:logado.id, alvoId:id, acao:'REDEFINIR_SENHA', detalhe:'Novo código de ativação', ip:req.ip });
+            return renderCodigos(res,'Novo código de ativação',[{nome:alvo.nome,matricula:alvo.matricula,codigo:formatarCodigo(codigo)}]);
+        } catch(e) { next(e); }
     },
-
-    // DELETE /admin/usuarios/:id -> remove um usuario
-    async excluir(req, res, next) {
+    async excluir(req,res,next) {
         try {
-            // Impede que o usuario logado exclua a si mesmo, evitando ficar "trancado" fora
-            if (parseInt(req.params.id, 10) === req.session.usuario.id) {
-                const usuarios = await UsuarioModel.listarTodos();
-                return res.status(400).render('admin/usuarios', {
-                    usuarios,
-                    filtroPerfil: '',
-                    erro: 'Voce nao pode excluir o proprio usuario enquanto estiver logado com ele.'
-                });
-            }
-            await UsuarioModel.excluir(req.params.id);
-            res.redirect('/admin/usuarios');
-        } catch (erro) {
-            next(erro);
-        }
+            const id=Number(req.params.id), alvo=await UsuarioModel.buscarPorId(id);
+            if(id===req.session.usuario.id) return res.status(400).send('Não é possível excluir o próprio usuário.');
+            if(!alvo||!podeGerenciar(req.session.usuario.perfil,alvo.perfil)) return res.sendStatus(403);
+            if(alvo.perfil==='DIRECAO' && await UsuarioModel.contarDirecoesAtivas() <= 1) return res.status(400).send('Não é possível excluir a última Direção ativa.');
+            await AuditoriaModel.registrar({ usuarioId:req.session.usuario.id, alvoId:id, acao:'EXCLUIR_USUARIO', detalhe:`Perfil ${alvo.perfil}`, ip:req.ip });
+            await UsuarioModel.excluir(id); return res.redirect('/admin/usuarios');
+        } catch(e) { next(e); }
     }
 };
-
-module.exports = UsuarioController;
+module.exports=UsuarioController;

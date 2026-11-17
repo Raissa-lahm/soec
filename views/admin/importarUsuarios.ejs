@@ -8,13 +8,11 @@
         <div class="alerta alerta-erro"><%= erro %></div>
     <% } %>
 
-    <p>Cada pessoa importada fica com a conta <strong>aguardando primeiro acesso</strong> e recebe um
-    <strong>código de ativação</strong>. Os códigos aparecem uma única vez na tela seguinte: entregue
-    um a cada pessoa. Quem já está cadastrado não é alterado.</p>
+    <p>Alunos recebem a matrícula como senha provisória e precisarão trocá-la no primeiro login. Professores e equipe ficam pendentes e recebem um código de ativação, exibido uma única vez na tela seguinte. Quem já está cadastrado não é alterado.</p>
 
     <p>Colunas, nesta ordem (separadas por <code>;</code> ou tabulação):<br>
     <code>nome ; matrícula ; email ; perfil ; curso ; turma</code><br>
-    Perfil: ALUNO, PROFESSOR, COORDENACAO ou DIRECAO (vazio = ALUNO). Curso e turma são opcionais.
+    Perfis disponíveis para sua conta: <%= perfis.join(', ') %> (vazio = ALUNO). Curso e turma são opcionais. Perfis não permitidos serão listados como ignorados.
     A primeira linha pode ser o cabeçalho.</p>
 
     <form action="/admin/usuarios/importar" method="POST" enctype="multipart/form-data">

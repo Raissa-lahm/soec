@@ -30,15 +30,12 @@
                 <label for="perfil">Perfil *</label>
                 <select id="perfil" name="perfil" required>
                     <option value="">Selecione...</option>
-                    <% ['ALUNO', 'PROFESSOR', 'COORDENACAO', 'DIRECAO'].forEach(p => { %>
+                    <% perfis.forEach(p => { %>
                         <option value="<%= p %>" <%= usuario && usuario.perfil === p ? 'selected' : '' %>><%= p %></option>
                     <% }) %>
                 </select>
             </div>
-            <div class="campo">
-                <label for="senha"><%= usuario ? 'Nova senha (deixe em branco para manter)' : 'Senha inicial *' %></label>
-                <input type="password" id="senha" name="senha" <%= usuario ? '' : 'required' %>>
-            </div>
+            <div class="campo"><p>Aluno recebe matrícula como senha provisória e deverá trocá-la. Perfis de equipe recebem um código de ativação.</p></div>
         </div>
 
         <div class="linha-form">

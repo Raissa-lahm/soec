@@ -11,17 +11,25 @@ const session = require('express-session');
 const pgSession = require('connect-pg-simple')(session);
 const pool = require('./database');
 
+if (process.env.NODE_ENV === 'production' && !process.env.SESSION_SECRET) {
+    throw new Error('SESSION_SECRET precisa estar definido em produção.');
+}
+if (!process.env.SESSION_SECRET) {
+    throw new Error('Defina SESSION_SECRET no arquivo .env antes de iniciar o SOEC.');
+}
+
 module.exports = session({
     store: new pgSession({
         pool: pool,          // usa a mesma conexao do banco principal
         tableName: 'session' // tabela criada no schema.sql
     }),
-    secret: process.env.SESSION_SECRET, // usado para assinar o cookie
+    secret: process.env.SESSION_SECRET,
     resave: false,               // nao regrava a sessao se nada mudou
     saveUninitialized: false,    // nao cria sessao vazia para visitantes
     cookie: {
         httpOnly: true,           // cookie nao pode ser lido via JS no navegador
         secure: process.env.NODE_ENV === 'production', // exige HTTPS em producao
+        sameSite: 'lax',
         maxAge: 1000 * 60 * 60 * 4 // sessao expira em 4 horas
     }
 });
