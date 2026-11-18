@@ -13,7 +13,6 @@ const { somenteGestao } = require('../middlewares/permissaoMiddleware');
 
 // Aba pública (aluno ou coordenação logados): ver os horários
 router.get('/horarios', autenticado, horarioController.listar);
-router.get('/horarios/arquivo/:id', autenticado, horarioController.baixarArquivo);
 
 // Área da coordenação: ver status + enviar/atualizar o PDF de cada curso
 router.get(
