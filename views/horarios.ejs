@@ -18,7 +18,7 @@
 <div class="grade">
   <% horarios.forEach(function(h) { %>
     <div class="cartao">
-      <% if (h.tem_arquivo_banco || h.arquivo_url) { %>
+      <% if (h.arquivo_url) { %>
         <span class="tag tag-dourada">Atualizado</span>
       <% } else { %>
         <span class="tag">Pendente</span>
@@ -26,9 +26,9 @@
 
       <h3><%= h.curso %></h3>
 
-      <% if (h.tem_arquivo_banco || h.arquivo_url) { %>
+      <% if (h.arquivo_url) { %>
         <p>
-          <a href="<%= h.tem_arquivo_banco ? `/horarios/arquivo/${h.id}` : h.arquivo_url %>" target="_blank" rel="noopener" class="botao botao-primario">
+          <a href="<%= h.arquivo_url %>" target="_blank" rel="noopener" class="botao botao-primario">
             Ver horário (PDF)
           </a>
         </p>
@@ -45,7 +45,7 @@
           <input type="hidden" name="voltarPara" value="/horarios">
           <input type="file" name="arquivo" accept="application/pdf" required class="input-arquivo">
           <button type="submit" class="botao botao-secundario">
-            <%= h.tem_arquivo_banco || h.arquivo_url ? 'Atualizar PDF' : 'Colocar horário' %>
+            <%= h.arquivo_url ? 'Atualizar PDF' : 'Colocar horário' %>
           </button>
         </form>
       <% } %>
