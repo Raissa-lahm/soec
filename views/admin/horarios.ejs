@@ -29,8 +29,8 @@
         <tr>
           <td><%= h.curso %></td>
           <td>
-            <% if (h.arquivo_url) { %>
-              <a href="<%= h.arquivo_url %>" target="_blank" rel="noopener"><%= h.arquivo_nome_original || 'Ver PDF' %></a>
+            <% if (h.tem_arquivo_banco || h.arquivo_url) { %>
+              <a href="<%= h.tem_arquivo_banco ? `/horarios/arquivo/${h.id}` : h.arquivo_url %>" target="_blank" rel="noopener"><%= h.arquivo_nome_original || 'Ver PDF' %></a>
             <% } else { %>
               <em>Nenhum PDF enviado</em>
             <% } %>
@@ -45,7 +45,6 @@
           </td>
           <td>
             <form action="/admin/horarios/enviar" method="POST" enctype="multipart/form-data" class="acoes">
-              <input type="hidden" name="curso" value="<%= h.curso %>">
               <input type="hidden" name="curso" value="<%= h.curso %>">
               <input type="file" name="arquivo" accept="application/pdf" required class="input-arquivo">
               <button type="submit" class="botao botao-primario">Enviar</button>
