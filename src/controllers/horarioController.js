@@ -22,6 +22,27 @@ module.exports = {
     }
   },
 
+  async baixarArquivo(req, res) {
+    try {
+      const arquivo = await horarioModel.buscarArquivoPorId(Number(req.params.id));
+      if (!arquivo) {
+        return res.status(404).send('Horário não encontrado.');
+      }
+
+      res.set({
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': 'inline',
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        Pragma: 'no-cache',
+        Expires: '0'
+      });
+      return res.send(arquivo.arquivo_conteudo);
+    } catch (erro) {
+      console.error('Erro ao abrir horário:', erro);
+      return res.status(500).send('Não foi possível abrir o horário.');
+    }
+  },
+
   // ---------------- Área administrativa (Coordenação/Direção) ----------------
 
   async adminListar(req, res) {
@@ -51,13 +72,15 @@ module.exports = {
         return res.redirect(`${destino}?erro=${encodeURIComponent('Selecione um arquivo PDF antes de enviar.')}`);
       }
 
-      const arquivo_url = `/uploads/horarios/${req.file.filename}`;
-
-      await horarioModel.salvarArquivo(curso, {
-        arquivo_url,
+      const atualizado = await horarioModel.salvarArquivo(curso, {
+        arquivo_conteudo: req.file.buffer,
         arquivo_nome_original: req.file.originalname,
         atualizado_por: req.session.usuario.id
       });
+
+      if (!atualizado) {
+        return res.redirect(`${destino}?erro=${encodeURIComponent('O curso informado não foi encontrado.')}`);
+      }
 
       res.redirect(`${destino}?sucesso=${encodeURIComponent(`Horário do curso "${curso}" atualizado com sucesso.`)}`);
     } catch (erro) {
