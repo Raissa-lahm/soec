@@ -738,3 +738,39 @@ tr:hover td { background: #f8faff; }
     .calendario { overflow-x: auto; }
     .calendario-grade { min-width: 560px; }
 }
+
+/* Ajustes mobile para eventos, calendario e gestao escolar */
+@media (max-width: 720px) {
+    .container { padding: 1rem .75rem; }
+    .grade { grid-template-columns: minmax(0, 1fr); gap: .9rem; }
+    .cartao, .form-cartao { min-width: 0; padding: 1rem; }
+    .barra-filtros { align-items: stretch; padding: .85rem; gap: .65rem; }
+    .barra-filtros .campo { flex: 1 1 100%; min-width: 0; }
+    .barra-filtros .campo[style*=flex] { flex: 1 1 auto !important; }
+    .barra-filtros .botao { width: 100%; }
+    .calendario { overflow: hidden; }
+    .calendario-grade { min-width: 0; }
+    .calendario-celula { min-height: 88px; padding: .2rem; }
+    .calendario-numero { width: 24px; height: 24px; font-size: .75rem; }
+    .evento-calendario, .data-calendario { white-space: normal; overflow-wrap: anywhere; font-size: .58rem; line-height: 1.15; }
+    .calendario-eventos { max-height: 3.2rem; }
+    .evento-nome { display: block; }
+    .form-cartao .linha-form { display: flex; flex-direction: column; gap: .25rem; }
+    .form-cartao .linha-form .campo { width: 100%; min-width: 0; }
+    .form-cartao .linha-form > form { width: 100%; display: flex; flex-wrap: wrap; gap: .5rem; }
+    .form-cartao .linha-form > form input:not([type=hidden]), .form-cartao .linha-form > form select { min-width: 0; width: 100%; }
+    .tabela-responsiva { max-width: 100%; }
+    .tabela-responsiva table { min-width: 600px; }
+    .tabela-responsiva td form { display: flex; flex-wrap: wrap; gap: .4rem; }
+    .tabela-responsiva td form select { min-width: 120px; max-width: 100%; }
+    .form-cartao details form .linha-form { display: flex; flex-direction: column; }
+    .form-cartao details form .linha-form > * { min-width: 0; width: 100%; }
+    .form-cartao details textarea { width: 100%; }
+    .form-cartao .acoes, .form-cartao > form .botao { max-width: 100%; }
+}
+
+@media (max-width: 380px) {
+    .calendario-semana-dia { font-size: .58rem; }
+    .calendario-celula { min-height: 76px; }
+    .evento-calendario, .data-calendario { font-size: .52rem; padding: .1rem; }
+}
