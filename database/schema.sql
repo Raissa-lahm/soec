@@ -159,6 +159,7 @@ CREATE TABLE IF NOT EXISTS horarios (
   curso VARCHAR(100) UNIQUE NOT NULL,
   arquivo_url VARCHAR(255),
   arquivo_nome_original VARCHAR(255),
+  arquivo_conteudo BYTEA,
   atualizado_em TIMESTAMP,
   atualizado_por INTEGER REFERENCES usuarios(id)
 );
