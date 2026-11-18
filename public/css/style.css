@@ -1002,3 +1002,34 @@ tr:hover td { background: #f8faff; }
     .calendario-celula { min-height: 76px; }
     .evento-calendario, .data-calendario { font-size: .52rem; padding: .1rem; }
 }
+/* Corrige controles com largura minima nativa em telas pequenas. */
+@media (max-width: 720px) {
+    .barra-filtros,
+    .gestao-secao,
+    .gestao-form-grade,
+    .gestao-form-datas,
+    .gestao-copiar-datas,
+    .gestao-registro,
+    .gestao-editar-registro,
+    .gestao-form-grade .campo,
+    .gestao-editar-registro label { min-width: 0; }
+
+    .campo input,
+    .campo select,
+    .campo textarea,
+    .gestao-form-grade input,
+    .gestao-form-grade select,
+    .gestao-editar-registro input[type="date"] {
+        display: block;
+        box-sizing: border-box;
+        width: 100%;
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    .gestao-form-grade { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .ano-novo-form > .campo:first-child,
+    .trimestre-novo-form > .campo:first-of-type { grid-column: 1 / -1; }
+    .barra-filtros .campo { flex-basis: 100%; }
+    .barra-filtros input[type="date"] { min-inline-size: 0; }
+}
