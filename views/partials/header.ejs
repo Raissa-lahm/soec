@@ -31,7 +31,8 @@
         <a href="/minhas-inscricoes" class="<%= rotaAtual && rotaAtual.startsWith('/minhas-inscricoes') ? 'ativo' : '' %>">Minhas inscrições</a>
     <% } %>
     <% if (usuarioLogado.perfil === 'COORDENACAO' || usuarioLogado.perfil === 'DIRECAO') { %>
-        <a href="/admin" class="<%= rotaAtual && rotaAtual.startsWith('/admin') ? 'ativo' : '' %>">Área administrativa</a>
+        <a href="/admin" class="<%= rotaAtual === '/admin' ? 'ativo' : '' %>">Área administrativa</a>
+        <a href="/admin/gestao-escolar" class="<%= rotaAtual && rotaAtual.startsWith('/admin/gestao-escolar') ? 'ativo' : '' %>">Gestão escolar</a>
     <% } %>
     <span class="usuario-tag"><%= usuarioLogado.nome.replace(/\bDirecao\b/g, 'Direção') %> (<%= usuarioLogado.perfil === 'DIRECAO' ? 'DIREÇÃO' : usuarioLogado.perfil === 'COORDENACAO' ? 'COORDENAÇÃO' : usuarioLogado.perfil %>)</span>
     <form action="/logout" method="POST" style="display:inline;">

@@ -1,58 +1,174 @@
-<% var titulo = 'Cursos, turmas e calendário letivo' %>
+<% var titulo = 'Gestão escolar' %>
 <%- include('../partials/header') %>
-<div class="titulo-pagina"><h1><%= titulo %></h1></div>
-<section class="form-cartao">
-    <h2>Ano letivo</h2>
-    <form action="/admin/anos-letivos" method="POST" class="linha-form">
-        <div class="campo"><label>Ano</label><input name="ano" type="number" min="2000" max="2100" value="<%= vigente.ano %>" required></div>
-        <div class="campo"><label>Início</label><input name="inicio" type="date" required></div>
-        <div class="campo"><label>Fim</label><input name="fim" type="date" required></div>
-        <button class="botao botao-primario">Salvar ano</button>
-    </form>
-    <form action="/admin/trimestres" method="POST" class="linha-form">
-        <input type="hidden" name="ano" value="<%= vigente.ano %>">
-        <div class="campo"><label>Trimestre</label><select name="numero"><option>1</option><option>2</option><option>3</option></select></div>
-        <div class="campo"><label>Início</label><input name="inicio" type="date" required></div>
-        <div class="campo"><label>Fim</label><input name="fim" type="date" required></div>
-        <button class="botao botao-primario">Salvar trimestre</button>
-    </form>
-    <% anos.forEach(a => { %><div class="linha-form"><form action="/admin/anos-letivos" method="POST"><input type="hidden" name="ano" value="<%= a.ano %>"><span>Ano <%= a.ano %></span><input name="inicio" type="date" value="<%= a.inicio %>" required><input name="fim" type="date" value="<%= a.fim %>" required><button class="botao botao-secundario">Editar</button></form><form action="/admin/anos-letivos/<%= a.ano %>?_method=DELETE" method="POST"><button class="botao botao-perigo">Excluir</button></form></div><% }) %>
-    <% trimestres.forEach(t => { %><div class="linha-form"><form action="/admin/trimestres" method="POST"><input type="hidden" name="ano" value="<%= t.ano %>"><input type="hidden" name="numero" value="<%= t.numero %>"><span><%= t.numero %>º trimestre</span><input name="inicio" type="date" value="<%= t.inicio %>" required><input name="fim" type="date" value="<%= t.fim %>" required><button class="botao botao-secundario">Editar</button></form><form action="/admin/trimestres/<%= t.id %>?_method=DELETE" method="POST"><button class="botao botao-perigo">Excluir</button></form></div><% }) %>
-</section>
-<section class="form-cartao">
-    <h2>Turmas de <%= vigente.ano %></h2>
-    <p>O código é gerado a partir do curso, série e subturma.</p>
-    <form action="/admin/turmas" method="POST" class="linha-form">
-        <input type="hidden" name="ano_letivo" value="<%= vigente.ano %>">
-        <div class="campo"><label>Curso</label><select name="curso_id" required><% cursos.forEach(c => { %><option value="<%= c.id %>"><%= c.numero %> — <%= c.nome %></option><% }) %></select></div>
-        <div class="campo"><label>Série</label><select name="serie"><option>1</option><option>2</option><option>3</option></select></div>
-        <div class="campo"><label>Subturma (opcional)</label><select name="subturma"><option value="">Turma única</option><% for(let n=1;n<=9;n++){ %><option value="<%= n %>"><%= n %></option><% } %></select></div>
-        <button class="botao botao-primario">Criar turma</button>
-    </form>
-    <div class="tabela-responsiva"><table><thead><tr><th>Código</th><th>Curso</th><th>Ano</th><th>Alterar</th><th>Ações</th></tr></thead><tbody>
-    <% turmas.forEach(t => { %><tr><td><%= t.codigo %></td><td><%= t.curso_nome %></td><td><%= t.ano_letivo %></td><td>
-        <form action="/admin/turmas/<%= t.id %>?_method=PUT" method="POST"><input type="hidden" name="ano_letivo" value="<%= t.ano_letivo %>"><select name="curso_id"><% cursos.forEach(c=>{ %><option value="<%= c.id %>" <%= c.id===t.curso_id?'selected':'' %>><%= c.nome %></option><% }) %></select><select name="serie"><% [1,2,3].forEach(s=>{ %><option value="<%= s %>" <%= s===t.serie?'selected':'' %>><%= s %></option><% }) %></select><select name="subturma"><option value="" <%= t.subturma===null?'selected':'' %>>Única</option><% for(let n=1;n<=9;n++){ %><option value="<%= n %>" <%= n===t.subturma?'selected':'' %>><%= n %></option><% } %></select><button class="botao botao-secundario">Atualizar</button></form>
-    </td><td><form action="/admin/turmas/<%= t.id %>/desativar" method="POST"><button class="botao botao-perigo" <%= !t.ativo?'disabled':'' %>>Desativar</button></form>
-    </td></tr><% }) %></tbody></table></div>
-    <a href="/admin/alunos-sem-turma" class="botao botao-secundario">Alunos sem turma (<%= semTurma.length %>)</a>
-</section>
-<section class="form-cartao">
-    <h2>Datas letivas</h2>
-    <form action="/admin/calendario-datas" method="POST">
-        <div class="linha-form"><div class="campo"><label>Título</label><input name="titulo" maxlength="150" required></div>
-        <div class="campo"><label>Tipo</label><select name="tipo"><% tiposData.forEach(t => { %><option value="<%= t %>"><%= t.replaceAll('_',' ') %></option><% }) %></select></div></div>
-        <div class="linha-form"><div class="campo"><label>Início</label><input name="data_inicio" type="date" required></div><div class="campo"><label>Fim (opcional)</label><input name="data_fim" type="date"></div></div>
-        <div class="linha-form"><div class="campo"><label>Curso (vazio = todos)</label><select name="curso_id"><option value="">Todos</option><% cursos.forEach(c => { %><option value="<%= c.id %>"><%= c.nome %></option><% }) %></select></div>
-        <div class="campo"><label>Série (vazio = todas)</label><select name="serie"><option value="">Todas</option><option>1</option><option>2</option><option>3</option></select></div></div>
-        <div class="campo"><label><input type="checkbox" name="sem_aula"> Não haverá aula</label></div>
-        <div class="campo"><label>Descrição</label><textarea name="descricao"></textarea></div>
-        <button class="botao botao-primario">Adicionar data</button>
-    </form>
-    <form action="/admin/calendario-datas/copiar" method="POST" class="linha-form">
-        <div class="campo"><label>Copiar datas do ano</label><input name="ano_origem" type="number" required></div>
-        <div class="campo"><label>Para o ano</label><input name="ano_destino" type="number" value="<%= vigente.ano %>" required></div>
-        <button class="botao botao-secundario">Copiar datas</button>
-    </form>
-    <% datas.slice(0,30).forEach(d => { %><details><summary><%= d.data_inicio %> — <%= d.titulo %> (<%= d.tipo %>)</summary><form action="/admin/calendario-datas/<%= d.id %>?_method=PUT" method="POST"><div class="linha-form"><input name="titulo" value="<%= d.titulo %>" required><select name="tipo"><% tiposData.forEach(t=>{ %><option value="<%= t %>" <%= t===d.tipo?'selected':'' %>><%= t %></option><% }) %></select><input name="data_inicio" type="date" value="<%= d.data_inicio %>" required><input name="data_fim" type="date" value="<%= d.data_fim||'' %>"></div><div class="linha-form"><select name="curso_id"><option value="">Todos os cursos</option><% cursos.forEach(c=>{ %><option value="<%= c.id %>" <%= d.curso_id===c.id?'selected':'' %>><%= c.nome %></option><% }) %></select><select name="serie"><option value="">Todas as séries</option><% [1,2,3].forEach(s=>{ %><option value="<%= s %>" <%= d.serie===s?'selected':'' %>><%= s %></option><% }) %></select><label><input type="checkbox" name="sem_aula" <%= d.sem_aula?'checked':'' %>> Sem aula</label></div><textarea name="descricao"><%= d.descricao||'' %></textarea><button class="botao botao-primario">Atualizar</button></form><form action="/admin/calendario-datas/<%= d.id %>?_method=DELETE" method="POST"><button class="botao botao-perigo">Excluir</button></form></details><% }) %>
-</section>
+
+<div class="gestao-escolar">
+    <header class="gestao-hero">
+        <div>
+            <span class="gestao-eyebrow">ADMINISTRAÇÃO ACADÊMICA</span>
+            <h1>Gestão escolar</h1>
+            <p>Organize o ano letivo, as turmas e as datas do calendário em um só lugar.</p>
+        </div>
+        <span class="gestao-ano-atual">Ano selecionado <strong><%= vigente.ano %></strong></span>
+    </header>
+
+    <div class="gestao-grade-periodos">
+        <section class="gestao-secao">
+            <div class="gestao-secao-titulo">
+                <span class="gestao-icone">01</span>
+                <div><h2>Anos letivos</h2><p>Defina o período de cada ano escolar.</p></div>
+            </div>
+            <form action="/admin/anos-letivos" method="POST" class="gestao-form-grade ano-novo-form">
+                <div class="campo"><label for="ano-novo">Ano</label><input id="ano-novo" name="ano" type="number" min="2000" max="2100" value="<%= vigente.ano %>" required></div>
+                <div class="campo"><label for="ano-inicio">Início</label><input id="ano-inicio" name="inicio" type="date" required></div>
+                <div class="campo"><label for="ano-fim">Fim</label><input id="ano-fim" name="fim" type="date" required></div>
+                <button class="botao botao-primario">Salvar ano letivo</button>
+            </form>
+
+            <% if (anos.length) { %>
+                <div class="gestao-lista-titulo"><h3>Anos cadastrados</h3><span><%= anos.length %></span></div>
+                <div class="gestao-lista-registros">
+                    <% anos.forEach(a => { %>
+                        <article class="gestao-registro gestao-registro-ano">
+                            <form action="/admin/anos-letivos" method="POST" class="gestao-editar-registro">
+                                <strong class="gestao-registro-nome"><%= a.ano %></strong>
+                                <input type="hidden" name="ano" value="<%= a.ano %>">
+                                <label>Início<input name="inicio" type="date" value="<%= a.inicio %>" required></label>
+                                <label>Fim<input name="fim" type="date" value="<%= a.fim %>" required></label>
+                                <button class="botao botao-secundario">Salvar alterações</button>
+                            </form>
+                            <form action="/admin/anos-letivos/<%= a.ano %>?_method=DELETE" method="POST" class="gestao-apagar-registro"><button class="botao botao-perigo">Excluir</button></form>
+                        </article>
+                    <% }) %>
+                </div>
+            <% } else { %>
+                <p class="gestao-vazio">Nenhum ano letivo cadastrado. Salve um ano para começar.</p>
+            <% } %>
+        </section>
+
+        <section class="gestao-secao">
+            <div class="gestao-secao-titulo">
+                <span class="gestao-icone">02</span>
+                <div><h2>Trimestres</h2><p>Configure os períodos do ano letivo <strong><%= vigente.ano %></strong>.</p></div>
+            </div>
+            <% if (typeof anoLetivoCadastrado !== 'undefined' && anoLetivoCadastrado) { %>
+                <form action="/admin/trimestres" method="POST" class="gestao-form-grade trimestre-novo-form">
+                    <input type="hidden" name="ano" value="<%= vigente.ano %>">
+                    <div class="campo"><label for="trimestre-numero">Trimestre</label><select id="trimestre-numero" name="numero"><option value="1">1º trimestre</option><option value="2">2º trimestre</option><option value="3">3º trimestre</option></select></div>
+                    <div class="campo"><label for="trimestre-inicio">Início</label><input id="trimestre-inicio" name="inicio" type="date" required></div>
+                    <div class="campo"><label for="trimestre-fim">Fim</label><input id="trimestre-fim" name="fim" type="date" required></div>
+                    <button class="botao botao-primario">Salvar trimestre</button>
+                </form>
+                <% if (trimestres.length) { %>
+                    <div class="gestao-lista-titulo"><h3>Períodos cadastrados</h3><span><%= trimestres.length %></span></div>
+                    <div class="gestao-lista-registros">
+                        <% trimestres.forEach(t => { %>
+                            <article class="gestao-registro gestao-registro-trimestre">
+                                <form action="/admin/trimestres" method="POST" class="gestao-editar-registro">
+                                    <strong class="gestao-registro-nome"><%= t.numero %>º trimestre</strong>
+                                    <input type="hidden" name="ano" value="<%= t.ano %>">
+                                    <input type="hidden" name="numero" value="<%= t.numero %>">
+                                    <label>Início<input name="inicio" type="date" value="<%= t.inicio %>" required></label>
+                                    <label>Fim<input name="fim" type="date" value="<%= t.fim %>" required></label>
+                                    <button class="botao botao-secundario">Salvar alterações</button>
+                                </form>
+                                <form action="/admin/trimestres/<%= t.id %>?_method=DELETE" method="POST" class="gestao-apagar-registro"><button class="botao botao-perigo">Excluir</button></form>
+                            </article>
+                        <% }) %>
+                    </div>
+                <% } else { %>
+                    <p class="gestao-vazio">Nenhum trimestre cadastrado para este ano.</p>
+                <% } %>
+            <% } else { %>
+                <div class="alerta alerta-aviso">Cadastre primeiro o ano letivo acima para configurar os trimestres.</div>
+            <% } %>
+        </section>
+    </div>
+
+    <section class="gestao-secao gestao-secao-larga gestao-turmas">
+        <div class="gestao-secao-titulo gestao-secao-titulo-acoes">
+            <span class="gestao-icone">03</span>
+            <div><h2>Turmas</h2><p>Turmas cadastradas para o ano letivo <strong><%= vigente.ano %></strong>.</p></div>
+            <a href="/admin/alunos-sem-turma" class="botao botao-secundario">Alunos sem turma <span class="gestao-contagem"><%= semTurma.length %></span></a>
+        </div>
+        <% if (typeof anoLetivoCadastrado !== 'undefined' && anoLetivoCadastrado) { %>
+            <form action="/admin/turmas" method="POST" class="gestao-form-grade turma-nova-form">
+                <input type="hidden" name="ano_letivo" value="<%= vigente.ano %>">
+                <div class="campo"><label for="turma-curso">Curso</label><select id="turma-curso" name="curso_id" required><% cursos.forEach(c => { %><option value="<%= c.id %>"><%= c.numero %> — <%= c.nome %></option><% }) %></select></div>
+                <div class="campo"><label for="turma-serie">Série</label><select id="turma-serie" name="serie"><option value="1">1ª série</option><option value="2">2ª série</option><option value="3">3ª série</option></select></div>
+                <div class="campo"><label for="turma-subturma">Subturma</label><select id="turma-subturma" name="subturma"><option value="">Turma única</option><% for(let n=1;n<=9;n++){ %><option value="<%= n %>">Subturma <%= n %></option><% } %></select></div>
+                <button class="botao botao-primario">Criar turma</button>
+            </form>
+        <% } else { %><div class="alerta alerta-aviso">Cadastre um ano letivo para criar turmas.</div><% } %>
+
+        <% if (turmas.length) { %>
+            <div class="tabela-responsiva gestao-tabela-wrap"><table class="gestao-tabela"><thead><tr><th>Turma</th><th>Curso</th><th>Ano</th><th>Editar</th><th>Situação</th></tr></thead><tbody>
+            <% turmas.forEach(t => { %><tr>
+                <td><span class="gestao-codigo-turma"><%= t.codigo %></span></td><td><%= t.curso_nome %></td><td><%= t.ano_letivo %></td>
+                <td><form class="gestao-editar-turma" action="/admin/turmas/<%= t.id %>?_method=PUT" method="POST">
+                    <input type="hidden" name="ano_letivo" value="<%= t.ano_letivo %>">
+                    <select aria-label="Curso" name="curso_id"><% cursos.forEach(c=>{ %><option value="<%= c.id %>" <%= c.id===t.curso_id?'selected':'' %>><%= c.nome %></option><% }) %></select>
+                    <select aria-label="Série" name="serie"><% [1,2,3].forEach(s=>{ %><option value="<%= s %>" <%= s===t.serie?'selected':'' %>><%= s %></option><% }) %></select>
+                    <select aria-label="Subturma" name="subturma"><option value="" <%= t.subturma===null?'selected':'' %>>Única</option><% for(let n=1;n<=9;n++){ %><option value="<%= n %>" <%= n===t.subturma?'selected':'' %>><%= n %></option><% } %></select>
+                    <button class="botao botao-secundario">Salvar</button>
+                </form></td>
+                <td><form action="/admin/turmas/<%= t.id %>/desativar" method="POST"><button class="botao <%= t.ativo?'botao-perigo':'botao-secundario' %>" <%= !t.ativo?'disabled':'' %>><%= t.ativo?'Desativar':'Inativa' %></button></form></td>
+            </tr><% }) %>
+            </tbody></table></div>
+        <% } else { %><p class="gestao-vazio">Nenhuma turma cadastrada para este ano letivo.</p><% } %>
+    </section>
+
+    <section class="gestao-secao gestao-secao-larga gestao-datas">
+        <div class="gestao-secao-titulo">
+            <span class="gestao-icone">04</span>
+            <div><h2>Calendário letivo</h2><p>Cadastre datas, recessos e períodos sem aula para a comunidade escolar.</p></div>
+        </div>
+        <div class="gestao-grade-datas">
+            <form action="/admin/calendario-datas" method="POST" class="gestao-form-datas">
+                <h3>Adicionar data</h3>
+                <div class="campo"><label for="data-titulo">Título</label><input id="data-titulo" name="titulo" maxlength="150" required></div>
+                <div class="gestao-form-grade">
+                    <div class="campo"><label for="data-tipo">Tipo</label><select id="data-tipo" name="tipo"><% tiposData.forEach(t => { %><option value="<%= t %>"><%= t.replaceAll('_',' ') %></option><% }) %></select></div>
+                    <div class="campo"><label for="data-inicio">Início</label><input id="data-inicio" name="data_inicio" type="date" required></div>
+                    <div class="campo"><label for="data-fim">Fim <small>(opcional)</small></label><input id="data-fim" name="data_fim" type="date"></div>
+                </div>
+                <div class="gestao-form-grade">
+                    <div class="campo"><label for="data-curso">Curso</label><select id="data-curso" name="curso_id"><option value="">Todos os cursos</option><% cursos.forEach(c => { %><option value="<%= c.id %>"><%= c.nome %></option><% }) %></select></div>
+                    <div class="campo"><label for="data-serie">Série</label><select id="data-serie" name="serie"><option value="">Todas</option><option value="1">1ª</option><option value="2">2ª</option><option value="3">3ª</option></select></div>
+                </div>
+                <label class="gestao-checkbox"><input type="checkbox" name="sem_aula"> Não haverá aula</label>
+                <div class="campo"><label for="data-descricao">Descrição</label><textarea id="data-descricao" name="descricao" rows="3"></textarea></div>
+                <button class="botao botao-primario">Adicionar ao calendário</button>
+            </form>
+
+            <form action="/admin/calendario-datas/copiar" method="POST" class="gestao-copiar-datas">
+                <h3>Copiar datas de outro ano</h3>
+                <p>Reaproveite as datas cadastradas e ajuste-as ao ano de destino.</p>
+                <div class="campo"><label for="ano-origem">Copiar do ano</label><input id="ano-origem" name="ano_origem" type="number" min="2000" max="2100" required></div>
+                <div class="campo"><label for="ano-destino">Para o ano</label><input id="ano-destino" name="ano_destino" type="number" min="2000" max="2100" value="<%= vigente.ano %>" required></div>
+                <button class="botao botao-secundario">Copiar datas</button>
+            </form>
+        </div>
+
+        <% if (datas.length) { %>
+            <div class="gestao-lista-titulo"><h3>Datas cadastradas</h3><span><%= datas.length %></span></div>
+            <div class="gestao-lista-datas">
+                <% datas.slice(0,30).forEach(d => { %>
+                    <details class="gestao-data-item">
+                        <summary><span class="gestao-data-tipo"><%= d.tipo.replaceAll('_',' ') %></span><time><%= d.data_inicio %><%= d.data_fim?' — '+d.data_fim:'' %></time><strong><%= d.titulo %></strong><span class="gestao-detalhe-prompt">Editar</span></summary>
+                        <form action="/admin/calendario-datas/<%= d.id %>?_method=PUT" method="POST" class="gestao-editar-data">
+                            <div class="gestao-form-grade"><div class="campo"><label>Título</label><input name="titulo" value="<%= d.titulo %>" required></div><div class="campo"><label>Tipo</label><select name="tipo"><% tiposData.forEach(t=>{ %><option value="<%= t %>" <%= t===d.tipo?'selected':'' %>><%= t.replaceAll('_',' ') %></option><% }) %></select></div></div>
+                            <div class="gestao-form-grade"><div class="campo"><label>Início</label><input name="data_inicio" type="date" value="<%= d.data_inicio %>" required></div><div class="campo"><label>Fim</label><input name="data_fim" type="date" value="<%= d.data_fim||'' %>"></div><div class="campo"><label>Curso</label><select name="curso_id"><option value="">Todos</option><% cursos.forEach(c=>{ %><option value="<%= c.id %>" <%= d.curso_id===c.id?'selected':'' %>><%= c.nome %></option><% }) %></select></div><div class="campo"><label>Série</label><select name="serie"><option value="">Todas</option><% [1,2,3].forEach(s=>{ %><option value="<%= s %>" <%= d.serie===s?'selected':'' %>><%= s %></option><% }) %></select></div></div>
+                            <label class="gestao-checkbox"><input type="checkbox" name="sem_aula" <%= d.sem_aula?'checked':'' %>> Não haverá aula</label>
+                            <div class="campo"><label>Descrição</label><textarea name="descricao" rows="2"><%= d.descricao||'' %></textarea></div>
+                            <div class="acoes"><button class="botao botao-primario">Salvar alterações</button></div>
+                        </form>
+                        <form action="/admin/calendario-datas/<%= d.id %>?_method=DELETE" method="POST" class="gestao-excluir-data"><button class="botao botao-perigo">Excluir data</button></form>
+                    </details>
+                <% }) %>
+            </div>
+            <% if (datas.length > 30) { %><p class="gestao-nota-lista">Exibindo as 30 datas mais recentes de <%= datas.length %>.</p><% } %>
+        <% } else { %><p class="gestao-vazio">Nenhuma data cadastrada no calendário letivo.</p><% } %>
+    </section>
+</div>
+
 <%- include('../partials/footer') %>
