@@ -69,7 +69,7 @@ Para mapear registros antigos, `npm run migrar-curso-turma` somente simula e lis
 ## Migrações
 
 - Banco novo: execute `database/schema.sql`, que já inclui a estrutura completa da Fase 1 e não cria usuários de teste. Não é necessário rodar `003` depois dele.
-- Banco existente: execute `002_primeiro_acesso_seguro.sql` se ainda não tiver aplicado essa migração; depois execute `003_fase1_cursos_eventos_calendario.sql`. A migração 003 é idempotente e acrescenta cursos/turmas, público e valores de eventos, inscrições, restrições e calendário.
+- Banco existente: aplique as migrações pendentes em ordem. A migração `005_horarios_persistentes.sql` armazena PDFs de horários no PostgreSQL para que os uploads sobrevivam a reinícios e novos deploys.
 - `database/seed_dev.sql` é exclusivamente para desenvolvimento e só deve ser executado depois do schema.
 
 O teste transacional completo de schema/migração exige um PostgreSQL descartável separado do banco real: defina `SOEC_TEST_DATABASE_URL` e rode `npm run test:migracao`. O script cria schemas dentro de uma transação e termina com `ROLLBACK`.
